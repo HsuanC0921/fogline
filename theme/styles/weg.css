@@ -1,0 +1,194 @@
+/* Dock: floating capsule in the shared material, bare icons, a dot per open app */
+.taskbar {
+  /* concentric with the icons: icon corner (23.3% of the icon) plus the Dock's own padding */
+  --dock-r: calc((var(--config-item-size) - 6px) * 0.233 + var(--config-padding));
+}
+.taskbar,
+.taskbar[data-has-margin="true"],
+.taskbar[data-size="min-content"] {
+  background: var(--mat);
+  border: 1px solid var(--mat-rim);
+  border-radius: var(--dock-r);
+  box-shadow: var(--mat-shadow), inset 0 1px 0 var(--mat-hi), var(--mat-glow);
+}
+
+/* the items container is a scroller by default, which clips anything that leaves the capsule;
+   the Dock window itself is much taller than the capsule, so icons can rise out of it */
+.taskbar > .weg-items-container {
+  border-radius: var(--dock-r);
+  overflow: visible !important;
+  animation: none;
+}
+
+.weg-item {
+  background-color: transparent;
+  box-shadow: none;
+  border-radius: 12px;
+  overflow: visible;
+}
+.weg-item:hover,
+.weg-item:active { background-color: transparent; transform: none; }
+
+/* Magnification: the hovered icon swells out of the Dock and its neighbours follow, macOS fisheye style.
+   The whole overlay scales so the unread badge rides along; the open dot is counter-scaled to stay put.
+   Margins spread the row so magnified icons never overlap. */
+.weg-item-drag-container {
+  --mag: 1;
+  --lift: 0px;
+  transition: margin 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.weg-item-overlay,
+.weg-item-drag-container .weg-item:not(.weg-item-overlay .weg-item) {
+  transform-origin: 50% 100%;
+  scale: var(--mag);
+  translate: 0 calc(var(--lift) * -1);
+  transition: scale 180ms cubic-bezier(0.22, 1, 0.36, 1), translate 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.weg-item-overlay .weg-item-open-sign {
+  scale: calc(1 / var(--mag));
+  translate: 0 calc((var(--lift) - var(--config-padding) / 2 * (var(--mag) - 1)) / var(--mag));
+  transition: scale 180ms cubic-bezier(0.22, 1, 0.36, 1), translate 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.horizontal .weg-item-drag-container:hover { --mag: 1.6; --lift: 12px; margin-inline: 14px; }
+.horizontal .weg-item-drag-container:has(+ .weg-item-drag-container:hover),
+.horizontal .weg-item-drag-container:hover + .weg-item-drag-container { --mag: 1.28; --lift: 5px; margin-inline: 6px; }
+.horizontal .weg-item-drag-container:has(+ * + .weg-item-drag-container:hover),
+.horizontal .weg-item-drag-container:hover + * + .weg-item-drag-container { --mag: 1.08; --lift: 1px; }
+
+/* pressing dims the icon like macOS instead of nudging it */
+.weg-item:active .weg-item-icon { filter: brightness(0.75); }
+
+/* an app asking for attention bounces, as on macOS */
+@keyframes dock-bounce {
+  0%, 100% { translate: 0 0; }
+  30% { translate: 0 -18px; }
+  50% { translate: 0 0; }
+  65% { translate: 0 -7px; }
+  80% { translate: 0 0; }
+}
+.weg-item:has(.weg-item-attention-indicator-flashing) { animation: dock-bounce 900ms cubic-bezier(0.3, 0, 0.3, 1) 3; }
+.weg-item .weg-item-attention-indicator { background: none; animation: none; }
+
+/* the wide Now Playing capsule stays put */
+.horizontal .weg-item-drag-container:has(.media-session-container) { margin-inline: 0 !important; }
+.weg-item-drag-container:has(.media-session-container) { --mag: 1 !important; --lift: 0px !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .weg-item-drag-container,
+  .weg-item-overlay,
+  .weg-item-overlay .weg-item-open-sign { transition: none; }
+  .weg-item:has(.weg-item-attention-indicator-flashing) { animation: none; }
+}
+
+.weg-item-overlay .weg-item-open-sign {
+  width: 4px;
+  height: 4px;
+  background-color: var(--fg-2);
+}
+.weg-item-overlay .weg-item-open-sign.weg-item-open-sign-focused {
+  background-color: var(--fg);
+  width: 4px;
+}
+
+.weg-item-overlay .weg-item-badge {
+  background-color: var(--badge);
+  color: #fff;
+  box-shadow: none;
+}
+
+.weg-separator { border-color: var(--mat-rim) !important; }
+
+/* One optical size for every icon: full-bleed square icons and glyph-style icons share the same
+   inset, and square icons get a soft squircle-ish corner so both families read as one set */
+.weg-item,
+.weg-item:has(.weg-item-icon[data-shape="square"]) { padding: 3px; }
+.weg-item .weg-item-icon { height: 100%; object-fit: contain; }
+.weg-item .weg-item-icon[data-shape="square"] { border-radius: 23.3%; }
+
+/* Now Playing: one capsule for both states, so starting playback only swaps its contents.
+   It keeps the same 3px inset and corner as the app icons, so its top and bottom line up with theirs.
+   Idle: a coral note tile in the art slot and a dim "not playing" line.
+   Playing: cover art, one line of title and the transport controls over a dimmed blur of the art. */
+.horizontal .weg-item.media-session-container {
+  width: 200px;
+  transition: width 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  padding: 2px 3px 3px;
+  background: transparent;
+}
+.media-session-container .media-session {
+  overflow: hidden;
+  border-radius: calc((var(--config-item-size) - 6px) * 0.233);
+  background-color: rgb(30 32 48 / 0.55);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+.media-session-container .media-session-blurred-thumbnail-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgb(20 22 36 / 0.3), rgb(20 22 36 / 0.6));
+}
+.media-session-container .media-session-thumbnail-container { width: auto; height: 100%; aspect-ratio: 1; padding: 4px; box-sizing: border-box; }
+.media-session-container .media-session-thumbnail { border-radius: 8px; box-shadow: 0 2px 6px rgb(0 0 0 / 0.3); }
+.media-session-container .media-session-info { align-items: flex-start !important; padding: 4px 10px 4px 6px; }
+.media-session-container .media-session-title {
+  color: #fff !important;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+}
+.media-session-container .media-session-actions { color: #fff !important; gap: 4px; margin-left: -4px; }
+.media-session-container .media-session-actions button { width: 22px; height: 18px; border-radius: 6px; }
+.media-session-container .media-session-actions button:hover { background: rgb(255 255 255 / 0.18); }
+
+/* idle: the component's own scoped styles outrank the theme here, hence !important */
+.media-session-container .media-session-title.media-session-title-default {
+  color: rgb(255 255 255 / 0.7) !important;
+  font-weight: 500;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* one centred row: note glyph + label, so both sit on the Dock's centre line */
+.horizontal .weg-item.media-session-container:has(.media-session-title-default) { width: 150px; }
+.media-session-container:has(.media-session-title-default) .media-session-thumbnail-container { display: none; }
+.media-session-container .media-session-info:has(.media-session-title-default) { align-items: center !important; padding: 0 12px; }
+.media-session-container .media-session-title.media-session-title-default::before {
+  content: "";
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 18V5l12-2v13' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='6' cy='18' r='3' fill='black'/%3E%3Ccircle cx='18' cy='16' r='3' fill='black'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 18V5l12-2v13' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='6' cy='18' r='3' fill='black'/%3E%3Ccircle cx='18' cy='16' r='3' fill='black'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* Indicators: one red unread badge on the icon's top-right corner, like macOS; the running dot stays centred below.
+   Instance counters are dropped, the dot already says "running" */
+.weg-item-overlay .weg-item-badge {
+  height: 16px;
+  min-width: 16px;
+  padding: 0 4px;
+  font-size: 0.6875rem;
+  line-height: 1;
+  translate: 25% -25%;
+}
+.weg-item-overlay .weg-item-instance-counter-badge { display: none; }
+/* apps that draw their own overlay picture (Telegram, Discord: the count is inside the picture) show that picture as the badge,
+   so the number stays readable; colour and glyph overlays fall back to the same empty red badge */
+.weg-item-overlay .weg-item-badge:has(img) { width: 20px; height: 20px; min-width: 20px; padding: 0; background: transparent; }
+.weg-item-overlay .weg-item-badge > img { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: auto; filter: sepia(1) hue-rotate(-52deg) saturate(5) brightness(1.05) contrast(1.1); }
+.weg-item-overlay .weg-item-badge:has(.weg-item-badge-color, .svg-icon, svg):not(:has(img)) { width: 16px; padding: 0; }
+.weg-item-overlay .weg-item-badge > :is(.weg-item-badge-color, .svg-icon, svg) { display: none; }
+
+/* a freshly launched app hops once after it pops in, like the macOS launch bounce */
+@keyframes dock-launch {
+  0%, 100% { translate: 0 0; }
+  35% { translate: 0 -22px; }
+  60% { translate: 0 0; }
+  78% { translate: 0 -8px; }
+}
+.weg-item-drag-container[data-mounting] .weg-item-overlay { animation: dock-launch 700ms 180ms cubic-bezier(0.3, 0, 0.3, 1) 1; }
+@media (prefers-reduced-motion: reduce) { .weg-item-drag-container .weg-item-overlay { animation: none; } }

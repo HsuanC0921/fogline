@@ -1,0 +1,15 @@
+isReorderDisabled: false
+left:
+- '@hsuan/fogline-launcher'
+- '@default/focused-app'
+center: []
+right:
+- '@hsuan/fogline-tray'
+- '@hsuan/fogline-input'
+- '@hsuan/fogline-bluetooth'
+- '@hsuan/fogline-battery'
+- '@hsuan/fogline-network'
+- '@hsuan/fogline-search'
+- '@hsuan/fogline-control'
+- '@hsuan/fogline-clock'
+- '@hsuan/fogline-notifications'

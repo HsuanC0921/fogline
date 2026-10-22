@@ -1,0 +1,27 @@
+/* Right-click menus: compact rows, text only, accent fill on hover, hairline separators (macOS 27 drops menu icons) */
+.context-menu {
+  gap: 0;
+  padding: 6px;
+  margin: 4px 12px 24px;
+  min-width: 220px;
+  background: var(--mat-regular);
+  border: 1px solid var(--mat-rim);
+  border-radius: 14px;
+  box-shadow: var(--mat-shadow), inset 0 1px 0 var(--mat-hi), var(--mat-glow);
+  color: var(--fg);
+  font-size: 0.8125rem;
+}
+.context-menu .menu-item {
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+}
+.context-menu .menu-item .svg-icon,
+.context-menu .menu-item .menu-item-img-icon { display: none; }
+.context-menu .menu-item .menu-item-label { font-weight: 400; }
+.context-menu .menu-item:hover:not(:disabled),
+.context-menu .menu-item:focus-visible { background: var(--accent); color: var(--on-accent); }
+.context-menu .menu-item.danger { color: var(--badge); }
+.context-menu .menu-item.danger:hover:not(:disabled) { background: var(--badge); color: #fff; }
+.context-menu hr, .context-menu .menu-separator { margin: 5px 10px; border: 0; height: 1px; background: var(--mat-rim); }

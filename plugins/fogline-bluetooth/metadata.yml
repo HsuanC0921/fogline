@@ -1,0 +1,21 @@
+id: "@hsuan/fogline-bluetooth"
+metadata:
+  displayName: !extend i18n/display_name.yml
+  description: !extend i18n/description.yml
+icon: LuBluetooth
+target: "@seelen/fancy-toolbar"
+plugin:
+  scopes:
+    - FocusedApp
+    - Bluetooth
+  template: |
+    const connected = (devices || []).some((d) => d.connected);
+    const style = {};
+    if (focusedApp?.title === "@hsuan/fogline-bt") style["--fogline-open"] = "1";
+    if (connected) style["--fogline-on"] = "1";
+    return Group({content: icon(connected ? "LuBluetoothConnected" : "LuBluetooth"), style});
+  tooltip: |-
+    const connected = (devices || []).filter((d) => d.connected);
+    const k = 2; // fogline:lang
+    return connected.length ? ["Bluetooth", "Bluetooth", "藍牙"][k] + " · " + connected.map((d) => d.name || ["Unnamed device", "名前のないデバイス", "未命名裝置"][k]).join(", ") : ["Bluetooth · view and manage devices", "Bluetooth · デバイスを表示・管理", "藍牙 · 查看與管理裝置"][k];
+  onClickV2: trigger("@hsuan/fogline-bt")

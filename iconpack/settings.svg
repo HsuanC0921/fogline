@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="16 16 480 480">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa8c4"/><stop offset="1" stop-color="#3b4766"/></linearGradient>
+    <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="gear" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#e2e7f2"/></linearGradient>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg)"/>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#mist)"/>
+  <circle cx="256" cy="256" r="140" fill="none" stroke="url(#gear)" stroke-width="48" stroke-dasharray="46 63.96" transform="rotate(-11 256 256)"/>
+  <circle cx="256" cy="256" r="118" fill="url(#gear)"/>
+  <circle cx="256" cy="256" r="46" fill="#3b4766"/>
+  <rect x="17" y="17" width="478" height="478" rx="111" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2"/>
+</svg>

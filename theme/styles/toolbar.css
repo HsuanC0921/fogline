@@ -1,0 +1,93 @@
+/* Menu bar: flush glass strip. Same material as the Dock and popovers; launcher glyph, bold app name,
+   then evenly spaced status items with one icon size and weight, clock last. */
+.ft-bar {
+  background: var(--mat);
+  border: 0;
+  border-radius: 0;
+  /* no highlight along the top edge: the bar has to read as part of the screen's edge */
+  box-shadow: inset 0 -1px 0 var(--mat-rim);
+  color: var(--fg);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgb(10 12 30 / 0.35);
+}
+/* Seelen puts a Show Desktop button in both corners of the bar; macOS has none, so the corners are removed */
+.ft-corner-button { display: none !important; }
+.ft-bar-item, .ft-bar-item * { font-weight: 500; }
+
+.ft-bar-left .ft-bar-item:first-child { padding-inline: 10px; }
+/* Fogline mark in place of the launcher's icon-font glyph: a sun half-set on the horizon over a line of fog */
+.ft-bar-left .ft-bar-item:first-child svg { display: none; }
+.ft-bar-left .ft-bar-item:first-child .ft-bar-item-content::before {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 2 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M4.3 10.2a3.7 3.7 0 0 1 7.4 0'/%3E%3Cpath d='M1 10.2h14'/%3E%3Cpath d='M3 13.4h5.4M10.4 13.4h2.6'/%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 1px 1px rgb(10 12 30 / 0.3));
+}
+.ft-bar-left .ft-bar-item:nth-child(2), .ft-bar-left .ft-bar-item:nth-child(2) * { font-weight: 700; }
+.ft-bar-left .ft-bar-item:nth-child(2) img { display: none; }
+/* app name sits right after the mark, as in macOS: no leftover icon slot or flex gap between them */
+.ft-bar-left { gap: 0; }
+.ft-bar-left .ft-bar-item:nth-child(2) { padding-inline: 6px; }
+.ft-bar-left .ft-bar-item:nth-child(2) .ft-bar-item-content { gap: 0; }
+.ft-bar-left .ft-bar-item:nth-child(2) .ft-bar-item-content > :has(> img) { display: none; }
+
+/* right side, as the macOS menu bar: 16px glyphs, each in a 22px-tall capsule slot, slots almost touching */
+#root .ft-bar .ft-bar-right { gap: 4px !important; }
+#root .ft-bar .ft-bar-right .ft-bar-item { box-sizing: border-box !important; min-width: 36px !important; width: auto !important; height: 24px !important; padding: 0 10px !important; margin: 0 !important; flex-shrink: 0; }
+#root .ft-bar .ft-bar-item-content { display: flex; align-items: center; justify-content: center; gap: 6px; height: 22px; line-height: 22px; }
+#root .ft-bar .ft-bar-item-content > div { display: flex; align-items: center; justify-content: center; gap: 6px; height: 22px; line-height: 22px; }
+#root .ft-bar .ft-bar-item svg { display: block; width: 16px; height: 16px; min-width: 16px; flex-shrink: 0; filter: none; }
+#root .ft-bar .ft-bar-left .ft-bar-item:first-child svg { display: none; }
+/* The hidden icon wrapper used to leave a flex gap beside the mask, shifting it off centre. */
+#root .ft-bar .ft-bar-left .ft-bar-item:first-child { box-sizing: border-box; width: 36px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; }
+#root .ft-bar .ft-bar-left .ft-bar-item:first-child .ft-bar-item-content { gap: 0; }
+#root .ft-bar .ft-bar-left .ft-bar-item:first-child .ft-bar-item-content > div { display: none; }
+#root .ft-bar .ft-bar-item-content img { width: 16px; height: 16px; object-fit: contain; }
+/* promoted tray icons are buttons inside one bar item: give each its own capsule slot */
+#root .ft-bar .ft-bar-item-content button { height: 22px; min-width: 28px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; transition: background-color 140ms ease-out; }
+#root .ft-bar .ft-bar-item-content button:hover { background: var(--tile-hover); }
+#root .ft-bar .ft-bar-right [data-plugin-id="@hsuan/fogline-tray"] { padding: 0; }
+#root .ft-bar .ft-bar-right [data-plugin-id="@hsuan/fogline-tray"]:hover { background: none; }
+#root .ft-bar .ft-bar-right [data-plugin-id="@hsuan/fogline-input"] { font-size: 14px; line-height: 22px; }
+#root .ft-bar .ft-bar-right [data-plugin-id="@hsuan/fogline-clock"] { font-size: 13px; line-height: 22px; padding-inline: 9px; }
+/* text glyphs sit slightly off the icons' centre line because of font metrics; nudge them onto it */
+#root .ft-bar .ft-bar-right [data-plugin-id="@hsuan/fogline-input"] .ft-bar-item-content,
+#root .ft-bar .ft-bar-right [data-plugin-id="@hsuan/fogline-clock"] .ft-bar-item-content { transform: translateY(-0.5px); }
+
+/* macOS highlights a menu bar item with a softly rounded rectangle, not a capsule */
+.ft-bar-item.ft-bar-item-clickable { border-radius: 7px; transition: background-color 140ms ease-out, box-shadow 140ms ease-out; }
+.ft-bar-item.ft-bar-item-clickable:hover { background-color: var(--tile-hover); }
+.ft-bar-item.ft-bar-item-clickable:active,
+.ft-bar-item.ft-bar-item-clickable[aria-expanded="true"],
+.ft-bar-item.ft-bar-item-clickable[data-open="true"] { background: var(--tile-hover); box-shadow: inset 0 1px 0 var(--mat-hi), inset 0 -1px 0 var(--mat-rim); }
+/* open panel: neutral glass capsule; the tray chevron lights only its own button */
+#root .ft-bar .ft-bar-item:not([data-plugin-id="@hsuan/fogline-tray"]):has([style*="--fogline-open"]),
+#root .ft-bar .ft-bar-item-content button:has([style*="--fogline-open"]) { background: rgb(255 255 255 / .26); box-shadow: inset 0 1px 0 var(--mat-hi), inset 0 -1px 0 var(--mat-rim); }
+/* live state: macOS shows Focus and privacy state as the bare glyph, never a filled capsule; only warnings take a colour */
+#root .ft-bar .ft-bar-item:has([style*="--fogline-warn"]) { color: #ff9f0a; }
+/* open on top of a state: brighten instead of dropping the tint */
+#root .ft-bar .ft-bar-item:has([style*="--fogline-open"]):is(:has([style*="--fogline-on"]), :has([style*="--fogline-focus"]), :has([style*="--fogline-warn"])) { filter: brightness(1.12); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .45); }
+.ft-bar-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; background: var(--tile-hover); }
+@media (max-width: 800px) { #root .ft-bar .ft-bar-right { gap: 4px; } #root .ft-bar .ft-bar-right .ft-bar-item { min-width: 30px; padding-inline: 7px; } }
+
+.ft-bar-item-content img { border-radius: 4px; }
+.ft-bar-item-badge { background-color: var(--badge); color: #fff; font-weight: 600; box-shadow: none; text-shadow: none; }
+/* unread: macOS puts no number in the menu bar; a small red dot on the glyph says "something is waiting" (the count stays in the tooltip and the centre) */
+#root .ft-bar .ft-bar-right [data-plugin-id="@hsuan/fogline-notifications"] { position: relative; overflow: visible; }
+#root .ft-bar .ft-bar-right [data-plugin-id="@hsuan/fogline-notifications"] .ft-bar-item-badge {
+  position: absolute; top: 3px; right: 6px; left: auto; bottom: auto; transform: none;
+  width: 8px; min-width: 8px; height: 8px; padding: 0; border-radius: 50%; box-sizing: border-box;
+  font-size: 0; line-height: 0; overflow: hidden; box-shadow: 0 0 0 1.5px var(--mat-regular);
+}
+
+@media (prefers-color-scheme: light) {
+  #root .ft-bar .ft-bar-item:not([data-plugin-id="@hsuan/fogline-tray"]):has([style*="--fogline-open"]),
+  #root .ft-bar .ft-bar-item-content button:has([style*="--fogline-open"]) { background: rgb(38 51 73 / .18); }
+  .ft-bar { text-shadow: 0 1px 0 rgb(255 255 255 / 0.5); }
+  .ft-bar-item svg { filter: none; }
+}

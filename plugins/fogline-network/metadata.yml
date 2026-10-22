@@ -1,0 +1,20 @@
+id: "@hsuan/fogline-network"
+metadata:
+  displayName: !extend i18n/display_name.yml
+  description: !extend i18n/description.yml
+icon: LuWifi
+target: "@seelen/fancy-toolbar"
+plugin:
+  scopes:
+    - FocusedApp
+    - Network
+  template: |
+    const content = !online ? icon("LuWifiOff") : usingInterface?.type === "IEEE80211" ? icon("LuWifi") : icon("LuEthernetPort");
+    const style = {};
+    if (focusedApp?.title === "@hsuan/fogline-net") style["--fogline-open"] = "1";
+    if (!online) style["--fogline-warn"] = "1";
+    return Group({content, style});
+  tooltip: |
+    const k = 2; // fogline:lang
+    return online ? ["Connected · connection details and nearby networks", "接続済み · 接続情報と近くのネットワーク", "網路已連線 · 查看連線資訊與附近網路"][k] : ["Not connected · open the network panel", "未接続 · ネットワークパネルを開く", "網路未連線 · 開啟網路面板"][k]
+  onClickV2: trigger("@hsuan/fogline-net")

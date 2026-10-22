@@ -1,0 +1,20 @@
+id: "@hsuan/fogline-battery"
+metadata:
+  displayName: !extend i18n/display_name.yml
+  description: !extend i18n/description.yml
+icon: LuBatteryFull
+target: "@seelen/fancy-toolbar"
+plugin:
+  scopes:
+    - Power
+  tooltip: |-
+    if (!batteries.length) return "";
+    const k = 2; // fogline:lang
+    return batteries.map((b, index) => {
+      const charging = b.state.toLowerCase() === "charging";
+      const seconds = charging ? b.timeToFull : b.timeToEmpty;
+      const remaining = Number.isFinite(seconds) && seconds > 0 ? " · " + (charging ? ["about " + Math.ceil(seconds / 60) + " min to full", "満充電まで約" + Math.ceil(seconds / 60) + "分", "約 " + Math.ceil(seconds / 60) + " 分鐘充滿"][k] : ["about " + Math.ceil(seconds / 60) + " min left", "残り約" + Math.ceil(seconds / 60) + "分", "約 " + Math.ceil(seconds / 60) + " 分鐘可用"][k]) : "";
+      return (batteries.length > 1 ? ["Battery ", "バッテリー ", "電池 "][k] + (index + 1) + " · " : "") + Math.round(b.percentage) + "%" + (charging ? " · " + ["charging", "充電中", "充電中"][k] : "") + remaining;
+    }).join("\n");
+  template: !include template.js
+  onClickV2: open("ms-settings:powersleep")

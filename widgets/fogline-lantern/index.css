@@ -1,0 +1,19 @@
+html, body, #root { width: 100vw; height: 100vh; margin: 0; background: transparent; }
+#root { display: flex; justify-content: center; align-items: flex-start; padding-top: 18vh; box-sizing: border-box; }
+.fs-box { width: 640px; max-width: calc(100vw - 48px); margin: 0; padding: 8px; border-radius: 24px; }
+.fs-field { display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 14px; }
+.fs-field svg { width: 22px; height: 22px; color: var(--fg-2); flex: none; }
+.fs-input { all: unset; flex: 1; font-size: 1.375rem; color: var(--fg); caret-color: var(--accent); }
+.fs-input::placeholder { color: var(--fg-3); }
+.fs-list { display: flex; flex-direction: column; padding: 4px 0 2px; border-top: 1px solid var(--mat-rim); margin-top: 4px; }
+.fs-list:empty { display: none; }
+.fs-row { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; font-size: 0.9375rem; color: var(--fg); cursor: default; }
+.fs-row img, .fs-row .fs-ph { width: 28px; height: 28px; border-radius: 7px; object-fit: contain; flex: none; background: var(--tile); }
+.fs-row .fs-sub { margin-left: auto; color: var(--fg-3); font-size: 0.75rem; }
+.fs-row[aria-selected="true"] { background: var(--accent); color: var(--on-accent); }
+.fs-row[aria-selected="true"] .fs-sub { color: inherit; opacity: 0.8; }
+.fs-answer { font-size: 1.125rem; }
+.fs-head { padding: 8px 12px 3px; font-size: 0.6875rem; font-weight: 600; color: var(--fg-3); }
+.fs-list { max-height: 60vh; overflow-y: auto; scrollbar-width: none; }
+.fs-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fs-row .fs-sub { max-width: 46%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: none; }

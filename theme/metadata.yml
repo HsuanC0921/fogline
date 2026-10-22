@@ -1,0 +1,19 @@
+id: "@hsuan/fogline"
+metadata:
+  displayName: !extend i18n/display_name.yml
+  description: !extend i18n/description.yml
+  tags:
+    - toolbar
+    - weg
+sharedStyles: !include shared.css
+styles:
+  "@seelen/fancy-toolbar": !include styles/toolbar.css
+  "@seelen/weg": !include styles/weg.css
+  "@seelen/tooltip": !include styles/tooltip.css
+  "@seelen/context-menu": !include styles/context-menu.css
+  "@seelen/flyouts": !include styles/flyouts.css
+  "@seelen/weg-preview": !include styles/weg-preview.css
+  "@seelen/power-menu": !include styles/power-menu.css
+  "@seelen/user-menu": !include styles/user-menu.css
+  "@seelen/task-switcher": !include styles/task-switcher.css
+  "@seelen/workspaces-viewer": !include styles/workspaces-viewer.css

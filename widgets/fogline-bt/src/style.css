@@ -1,0 +1,20 @@
+@import "../../shared/menu.css";
+
+/* the row holds two buttons: connect/disconnect, and "移除" that shows on hover */
+.bt-row { padding: 0; gap: 0; }
+.bt-main { all: unset; box-sizing: border-box; flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 4px 8px; border-radius: 10px; cursor: default; }
+.bt-main:disabled { opacity: 1; }
+.bt-forget { all: unset; flex: none; margin-right: 6px; padding: 2px 8px; border-radius: 6px; font-size: 0.6875rem; color: var(--fg-3); opacity: 0; cursor: default; }
+.bt-row:hover .bt-forget, .bt-forget:focus-visible { opacity: 1; }
+.bt-forget:hover { background: var(--tile-hover); color: var(--fg); }
+
+/* inline pairing prompt under the device being paired */
+.bt-pair { margin: 2px 4px 6px 44px; display: flex; flex-direction: column; gap: 6px; }
+.bt-pair-text { margin: 0; font-size: 0.75rem; color: var(--fg-2); }
+.bt-pin { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.18em; font-variant-numeric: tabular-nums; }
+.bt-input { box-sizing: border-box; width: 100%; padding: 6px 10px; border: 0; border-radius: 8px; background: var(--tile); color: var(--fg); font: inherit; font-size: 0.8125rem; outline: none; }
+.bt-input:focus { box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 60%, transparent); }
+.bt-pair-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.bt-btn { all: unset; padding: 4px 12px; border-radius: 999px; background: var(--tile); font-size: 0.75rem; font-weight: 600; cursor: default; }
+.bt-btn:hover { background: var(--tile-hover); }
+.bt-btn.primary { background: var(--accent); color: var(--on-accent); }

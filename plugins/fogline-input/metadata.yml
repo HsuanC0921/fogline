@@ -1,0 +1,35 @@
+id: "@hsuan/fogline-input"
+metadata:
+  displayName: !extend i18n/display_name.yml
+  description: !extend i18n/description.yml
+icon: FaRegKeyboard
+target: "@seelen/fancy-toolbar"
+plugin:
+  scopes:
+    - FocusedApp
+    - Keyboard
+  template: |
+    const content = (() => {
+    const code = (activeLang?.code || activeLangPrefix || "").toLowerCase();
+    const native = !!(imeState && imeState.native);
+    let glyph;
+    if (code.startsWith("zh")) glyph = native ? "中" : "英";
+    else if (code.startsWith("ja")) glyph = !native ? "A" : imeState.katakana ? "ア" : "あ";
+    else if (code.startsWith("ko")) glyph = native ? "한" : "A";
+    else glyph = (activeLangPrefix || "?").toUpperCase();
+    return glyph;
+    
+    })();
+    return Group({content, style: focusedApp?.title === "@hsuan/fogline-input" ? {"--fogline-open": "1"} : {}});
+  tooltip: |-
+    const k = 2; // fogline:lang
+    return (activeLang?.nativeName || ["Input Method", "入力方式", "輸入法"][k]) + [" · switch language and input mode", " · 言語と入力モードを切り替え", " · 切換語言與輸入模式"][k]
+  style:
+    flexShrink: 0
+    minWidth: 22px
+    justifyContent: center
+    display: flex
+    alignItems: center
+    lineHeight: 1
+    fontWeight: 600
+  onClickV2: trigger("@hsuan/fogline-input")

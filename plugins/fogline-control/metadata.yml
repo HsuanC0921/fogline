@@ -1,0 +1,18 @@
+id: "@hsuan/fogline-control"
+metadata:
+  displayName: !extend i18n/display_name.yml
+  description: !extend i18n/description.yml
+icon: LuSlidersHorizontal
+target: "@seelen/fancy-toolbar"
+plugin:
+  scopes:
+    - FocusedApp
+  template: |
+    const content = (() => {
+    return icon("LuSlidersHorizontal")
+    })();
+    return Group({content, style: focusedApp?.title === "@hsuan/fogline-cc" ? {"--fogline-open": "1"} : {}});
+  tooltip: |-
+    const k = 2; // fogline:lang
+    return ["Control Center · brightness, volume, eye care and connections", "コントロールセンター · 明るさ、サウンド、目の保護、接続", "控制中心 · 亮度、音量、護眼與連線"][k]
+  onClickV2: trigger("@hsuan/fogline-cc")

@@ -1,0 +1,21 @@
+/* Apple-menu look: text only, accent-filled hover, thin separators */
+.fm-menu { display: flex; flex-direction: column; min-width: 240px; padding: 6px; border-radius: 14px; }
+.fm-item {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  color: var(--fg);
+  cursor: default;
+}
+.fm-item:hover, .fm-item:focus-visible { background: var(--accent); color: var(--on-accent); }
+.fm-item.armed { background: var(--badge); color: #fff; }
+.fm-hint { color: var(--fg-2); font-size: 0.75rem; letter-spacing: 0.02em; }
+.fm-item:hover .fm-hint, .fm-item:focus-visible .fm-hint { color: inherit; opacity: 0.75; }
+.fm-sep { height: 1px; margin: 5px 10px; background: var(--mat-rim); }

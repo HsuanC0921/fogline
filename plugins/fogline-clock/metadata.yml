@@ -1,0 +1,16 @@
+id: "@hsuan/fogline-clock"
+metadata:
+  displayName: !extend i18n/display_name.yml
+  description: !extend i18n/description.yml
+icon: FaCalendar
+target: "@seelen/fancy-toolbar"
+plugin:
+  scopes:
+    - FocusedApp
+    - Date
+  template: |
+    return Group({content: date, style: focusedApp?.title === "@hsuan/fogline-cal" ? {"--fogline-open": "1"} : {}});
+  tooltip: |-
+    const k = 2; // fogline:lang
+    return ["Calendar · date and holidays", "カレンダー · 日付と祝日", "月曆 · 日期、農曆與假日"][k]
+  onClickV2: trigger("@hsuan/fogline-cal")

@@ -1,0 +1,13 @@
+/* Alt+Tab style switcher: one glass pane, window tiles, accent ring on the selection */
+.task-switcher {
+  background: var(--mat-regular);
+  border: 1px solid var(--mat-rim);
+  border-radius: 28px;
+  box-shadow: var(--mat-shadow), inset 0 1px 0 var(--mat-hi), var(--mat-glow);
+  color: var(--fg);
+}
+.task-switcher .task { border-radius: 16px; background: var(--tile); box-shadow: none; transition: background-color 120ms ease-out, transform 120ms ease-out; }
+.task-switcher .task:hover { background: var(--tile-hover); }
+.task-switcher .task:focus { outline: 2.5px solid var(--accent) !important; outline-offset: 0; background: var(--tile-hover); }
+.task-switcher .task .task-title { font-size: 0.8125rem; }
+.task-switcher .task .task-preview-container { background: rgb(0 0 0 / 0.22); }

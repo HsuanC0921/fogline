@@ -1,0 +1,361 @@
+/* One material for menu bar, Dock, popovers and start menu.
+   Dark and light variants follow the Windows app theme.
+   A transparent WebView window cannot blur the desktop, so "glass" is built from layers instead of a blur:
+   a mid-tone tint (never near-black), a top-down sheen, a bright specular rim and a soft inner glow. */
+:root {
+  --mat:
+    linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0) 55%),
+    rgb(60 72 94 / 0.74);
+  /* denser "regular" glass for text-heavy surfaces (menus, popovers, tooltips) so windows behind don't bleed through */
+  /* the body of the glass is one flat tint, so text never sits on a gradient; all the "glass" is in the edge */
+  --mat-regular: rgb(36 46 66 / 0.84);
+  /* thick-glass edge: a bright band that hugs the border and fades inward (the lens), a sharper highlight on the
+     top-left and a weaker bounce light on the bottom-right. The pane's centre stays untouched. */
+  --mat-glow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.10),
+    inset 2px 3px 4px -3px rgb(255 255 255 / 0.60),
+    inset -2px -3px 4px -3px rgb(255 255 255 / 0.30),
+    inset 0 0 14px 0 rgb(255 255 255 / 0.07);
+  --mat-shadow: 0 8px 24px rgb(8 14 28 / 0.30), 0 1px 3px rgb(8 14 28 / 0.22);
+  --mat-rim: rgb(255 255 255 / 0.20);
+  --mat-hi: rgb(255 255 255 / 0.22);
+  --panel-edge: linear-gradient(135deg, rgb(255 255 255 / .48), rgb(255 255 255 / .12) 30%, rgb(255 255 255 / .05) 64%, rgb(255 255 255 / .27));
+  --panel-shadow: 0 8px 24px rgb(8 14 28 / .24), inset 0 1px 0 rgb(255 255 255 / .12);
+  --fg: #fbfbff;
+  --fg-2: #d2d4e2;
+  --fg-3: #bac4d6;
+  --tile: rgb(255 255 255 / 0.12);
+  --tile-hover: rgb(255 255 255 / 0.20);
+  /* follows the Windows accent, which Windows derives from the wallpaper when "Automatic accent colour" is on */
+  --accent: var(--system-accent-color, #0a84ff);
+  --on-accent: #fff;
+  --badge: #ff453a;
+  --holiday: #ffafb1;
+  --makeup: #ffd095;
+
+  --radius-s: 10px;
+  --radius-m: 12px; /* concentric: popover radius 22 minus its 10px padding */
+
+  --slu-std-fg-color: var(--fg);
+  --slu-std-fg-secondary-color: var(--fg-2);
+  --slu-std-fg-muted-color: var(--fg-3);
+  --slu-std-fg-disabled-color: #7c7f96;
+  --slu-std-bg-dark-color: #2c2e40;
+  --slu-std-bg-color: #3a3d54;
+  --slu-std-bg-light-color: #4a4e6a;
+  --slu-std-ui-color: var(--accent);
+  --slu-std-ui-fg-color: var(--on-accent);
+  --slu-std-ui-hover-color: color-mix(in oklab, var(--accent), white 14%);
+  --slu-std-ui-hover-overlay: var(--tile-hover);
+  --slu-std-ui-pressed-overlay: var(--tile-hover);
+  --slu-std-ui-selected-overlay: var(--tile-hover);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --mat:
+      linear-gradient(180deg, rgb(255 255 255 / 0.28), rgb(255 255 255 / 0) 55%),
+      rgb(218 225 239 / 0.90);
+    --mat-regular: rgb(229 234 244 / 0.94);
+    --mat-glow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.45),
+      inset 2px 3px 4px -3px rgb(255 255 255 / 0.95),
+      inset -2px -3px 4px -3px rgb(255 255 255 / 0.60),
+      inset 0 0 14px 0 rgb(255 255 255 / 0.30);
+    --mat-shadow: 0 8px 24px rgb(60 78 104 / 0.20), 0 1px 3px rgb(60 78 104 / 0.14);
+    --mat-rim: rgb(255 255 255 / 0.45);
+    --mat-hi: rgb(255 255 255 / 0.60);
+    --fg: #182236;
+    --fg-2: #344158;
+    --fg-3: #445067;
+    --accent: oklch(from var(--system-accent-color, #0a84ff) min(l, 0.48) min(c, 0.16) h);
+    --panel-edge: linear-gradient(135deg, rgb(255 255 255 / .95), rgb(255 255 255 / .50) 30%, rgb(70 87 117 / .20) 64%, rgb(255 255 255 / .72));
+    --panel-shadow: 0 8px 24px rgb(40 59 86 / .18), inset 0 1px 0 rgb(255 255 255 / .70);
+    --tile: rgb(60 70 110 / 0.10);
+    --tile-hover: rgb(60 70 110 / 0.17);
+    --badge: #ff3b30;
+    --holiday: #a32f46;
+    --makeup: #80501f;
+
+    --slu-std-fg-disabled-color: #a9acc0;
+    --slu-std-bg-dark-color: #cfd5e5;
+    --slu-std-bg-color: #dde2ee;
+    --slu-std-bg-light-color: #c5ccdf;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root { --mat: var(--slu-std-bg-color); --mat-regular: var(--slu-std-bg-color); }
+}
+
+html, body, *, *::before, *::after, button, input, textarea, select {
+  /* Latin and digits from Segoe UI Variable (closest to SF), Han characters from Noto Sans TC; Japanese pages swap in Noto Sans JP
+     so kanji get Japanese forms */
+  font-family: "Segoe UI Variable Text", "Segoe UI", "Noto Sans TC", "Microsoft JhengHei UI", "PingFang TC", sans-serif !important;
+}
+:lang(ja), :lang(ja) * {
+  font-family: "Segoe UI Variable Text", "Segoe UI", "Noto Sans JP", "Yu Gothic UI", "Meiryo UI", sans-serif !important;
+}
+/* CJK typesetting: a thin space between Han and Latin/digits, trimmed full-width punctuation, strict line breaking, no faux bold */
+html {
+  text-autospace: normal;
+  text-spacing-trim: normal;
+  line-break: strict;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
+}
+/* digits keep one width only where they change: clock, calendar, timestamps, PIN */
+.ft-bar, .fcal-box, .fn-time, .bt-pin, .fc-box { font-variant-numeric: tabular-nums; }
+
+body { color: var(--fg); }
+/* panels are controls, not documents: nothing selects or drags except text fields */
+body { -webkit-user-select: none; user-select: none; }
+input, textarea { -webkit-user-select: text; user-select: text; }
+img, svg { -webkit-user-drag: none; }
+button:disabled { cursor: default; opacity: 0.55; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+::selection { background: color-mix(in oklab, var(--accent) 45%, transparent); color: var(--fg); }
+::-webkit-scrollbar-thumb { background-color: var(--tile-hover); }
+::-webkit-scrollbar-thumb:hover { background-color: var(--fg-3); }
+
+/* ---- Popovers: Control Center flavour, same material as the bars ---- */
+.slu-std-popover {
+  padding: 10px;
+  /* one placement rule for every popup: 4px below the menu bar, 12px from the screen edge when clamped;
+     the 24px bottom margin is room for the shadow, otherwise the window edge clips it into a rectangle */
+  margin: 4px 12px 24px;
+  background: var(--mat-regular);
+  border: 1px solid var(--mat-rim);
+  border-radius: 22px;
+  box-shadow: var(--mat-shadow), inset 0 1px 0 var(--mat-hi), var(--mat-glow);
+  color: var(--fg);
+  font-size: 0.8125rem;
+}
+
+/* specular rim: a 1px ring whose brightness follows an angle, strongest at the top-left and bottom-right corners as light catches
+   the bevel of real glass. It is only a ring (masked), so it never covers content. */
+.slu-std-popover, .weg-item-preview-container, .power-popup, .flyout, .notification, .fn-header, .fn-dnd, .fn-empty, .fn-error, .fn-card:not([data-depth="2"]) { position: relative; }
+:is(.slu-std-popover, .weg-item-preview-container, .power-popup, .flyout, .notification, .fn-header, .fn-dnd, .fn-empty, .fn-error, .fn-card:not([data-depth="2"]))::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.25px; pointer-events: none;
+  background: conic-gradient(from 200deg at 50% 50%, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.10) 16%, rgb(255 255 255 / 0.02) 38%, rgb(255 255 255 / 0.10) 58%, rgb(255 255 255 / 0.65) 78%, rgb(255 255 255 / 0.85));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+
+button[data-skin="default"] {
+  background-color: var(--tile);
+  box-shadow: none;
+  border-radius: var(--radius-m);
+}
+button[data-skin="default"]:hover:enabled { background-color: var(--tile-hover); }
+
+/* accent only marks "on": solid fill, contrasting glyph, no glow */
+button[data-skin="solid"],
+button[data-skin="solid"]:hover:enabled {
+  background-color: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+  border-radius: var(--radius-m);
+}
+
+.quick-settings .radio-buttons-container .radio-button { min-height: 76px; gap: 6px; }
+
+input[type="range"][data-skin="flat"] {
+  height: 1.75rem;
+  border-radius: 999px;
+  background: var(--tile);
+  box-shadow: none;
+}
+
+.calendar-popup .calendar-cell { border-radius: 50%; }
+.calendar-popup .calendar-weekday { font-weight: 500; font-size: 0.75rem; color: var(--fg-3); }
+.calendar-popup .calendar-cell.calendar-cell-off-month { color: var(--fg-3); }
+.calendar-popup .calendar-cell.calendar-cell-today,
+.calendar-popup .calendar-cell.calendar-cell-selected {
+  background-color: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+/* Notification Centre: large title, round icon buttons, stacked cards, quiet footer link */
+.notifications-popup { width: 360px; gap: 10px; }
+.notifications-popup .notifications-popup-header { padding: 2px 4px 0 6px; gap: 6px; }
+.notifications-popup .notifications-popup-header > span { font-size: 1.0625rem; font-weight: 700; letter-spacing: 0.01em; }
+.notifications-popup .notifications-popup-header button {
+  height: 26px;
+  min-width: 26px;
+  padding: 0 10px;
+  border-radius: 13px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.notifications-popup .notifications-popup-header button:has(.svg-icon) { padding: 0; width: 26px; }
+.notifications-popup .notifications-popup-body { gap: 8px; }
+.notifications-popup .notifications-popup-empty { height: 160px; flex-direction: column; gap: 10px; color: var(--fg-3); font-weight: 500; }
+.notifications-popup .notifications-popup-empty::before {
+  content: "";
+  width: 34px;
+  height: 34px;
+  background: currentColor;
+  opacity: 0.6;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'/%3E%3Cpath d='M10.3 21a1.94 1.94 0 0 0 3.4 0'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.notifications-popup .notifications-popup-footer { border-top: 1px solid var(--mat-rim); padding-top: 6px; }
+.notifications-popup .notifications-popup-footer button { color: var(--fg-2); font-size: 0.75rem; }
+.notifications-popup .notifications-popup-footer button:hover { color: var(--fg); }
+
+.notification {
+  background-color: var(--tile);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.10);
+  border-radius: var(--radius-m);
+  padding: 10px 12px 12px;
+  font-size: 0.8125rem;
+  transition: background-color 150ms, scale 100ms;
+}
+.notification:hover { background-color: var(--tile-hover); }
+.notification .notification-header { border-bottom: 0; padding-bottom: 0; margin-bottom: 6px; }
+.notification .notification-header-info { font-size: 0.6875rem; font-weight: 600; color: var(--fg-3); }
+.notification .notification-icon { border-radius: 5px; }
+.notification .notification-body-logo-image { width: 2.5rem; height: 2.5rem; border-radius: 10px; margin-right: 10px; }
+.notification .notification-body-content { color: var(--fg-2); line-height: 1.4; }
+.notification .notification-body-content > p:first-of-type { color: var(--fg); font-weight: 600; margin-bottom: 1px; }
+.notification .notification-body-hero-image { border-radius: 8px; }
+.notification .notification-actions { margin-top: 10px; gap: 6px; }
+.notification .notification-actions button { flex: 1; height: 28px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; }
+
+.keyboard-selector .layout,
+.bt-device,
+.system-tray-item,
+.media-device { border-radius: 10px; }
+.keyboard-selector .layout:hover,
+.bt-device:hover,
+.system-tray-item:hover { background-color: var(--tile-hover); }
+.keyboard-selector .layout.layout-active { background-color: var(--accent); color: var(--on-accent); }
+.keyboard-selector .layout.layout-active .layout-keyboard { color: inherit; opacity: 0.85; }
+.keyboard-selector .layout:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.bluetooth-popup .bluetooth-radio-control {
+  background-color: var(--tile);
+  box-shadow: none;
+  border-radius: var(--radius-m);
+  padding: 10px 12px;
+}
+
+.bt-list:not(:last-child),
+.media-popup .media-device-view .media-device-footer { border-color: var(--mat-rim); }
+
+/* ---- Start menu: same material, pill search, neutral selection ---- */
+.apps-menu { background: var(--mat); color: var(--fg); }
+.apps-menu[data-fullscreen="false"] {
+  border-radius: 28px;
+  border: 1px solid var(--mat-rim);
+  box-shadow: var(--mat-shadow), inset 0 1px 0 var(--mat-hi), var(--mat-glow);
+  overflow: hidden;
+}
+.apps-menu[data-fullscreen="false"] { --columns: 6; --folder-columns: 4; background: var(--mat-regular); }
+.apps-menu[data-fullscreen="false"] .apps-menu-header { padding: 22px 26px 16px; gap: 12px; border-bottom: 1px solid var(--mat-rim); }
+.apps-menu[data-fullscreen="false"] .apps-menu-header input[type="search"] { height: 42px; padding-inline: 18px; background: var(--tile); font-size: 0.9375rem; }
+.apps-menu[data-fullscreen="false"] .apps-menu-header button { min-height: 34px; padding-inline: 14px; border-radius: 17px; }
+.apps-menu[data-fullscreen="false"] .apps-menu-body { scrollbar-gutter: stable; }
+.apps-menu[data-fullscreen="false"] .pinned-view,
+.apps-menu[data-fullscreen="false"] .all-apps-view { padding: 22px 26px; }
+.apps-menu[data-fullscreen="false"] .pinned-view-list,
+.apps-menu[data-fullscreen="false"] .all-apps-view-list { gap: 18px 14px; align-content: start; }
+.apps-menu[data-fullscreen="false"] .app,
+.apps-menu[data-fullscreen="false"] .folder { aspect-ratio: auto; min-height: 112px; grid-template-rows: 64px 2.6rem; gap: 8px; padding: 10px; border-radius: 18px; }
+.apps-menu[data-fullscreen="false"] .app .app-icon { width: 64px; height: 64px; border-radius: 23%; box-shadow: none; }
+.apps-menu[data-fullscreen="false"] .app-name,
+.apps-menu[data-fullscreen="false"] .folder-name { font-size: 0.8125rem; font-weight: 500; line-height: 1.4; }
+.apps-menu[data-fullscreen="false"] .apps-menu-footer { padding: 12px 24px; }
+@media (max-width: 850px) { .apps-menu[data-fullscreen="false"] { --columns: 5; } }
+@media (max-width: 640px) { .apps-menu[data-fullscreen="false"] { --columns: 4; } }
+@media (max-width: 480px) {
+  .apps-menu[data-fullscreen="false"] { --columns: 3; }
+  .apps-menu[data-fullscreen="false"] .apps-menu-header { padding: 16px 14px 12px; }
+  .apps-menu[data-fullscreen="false"] .pinned-view,
+  .apps-menu[data-fullscreen="false"] .all-apps-view { padding: 16px 12px; }
+}
+.apps-menu .apps-menu-header { padding: 14px 16px; }
+.apps-menu .apps-menu-header input[type="search"] {
+  height: 2.25rem;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background-color: var(--tile);
+  box-shadow: none;
+}
+.apps-menu .apps-menu-footer { padding: 12px 16px; border-top: 1px solid var(--mat-rim); }
+.apps-menu[data-fullscreen="true"] { --columns: 7; --folder-columns: 4; background: var(--mat-regular); }
+.apps-menu[data-fullscreen="true"] .apps-menu-header { max-width: 760px; margin-inline: auto; padding: 40px 24px 20px; }
+.apps-menu[data-fullscreen="true"] .pinned-view,
+.apps-menu[data-fullscreen="true"] .all-apps-view { max-width: 1120px; margin-inline: auto; padding: 20px 32px; }
+.apps-menu[data-fullscreen="true"] .pinned-view-list,
+.apps-menu[data-fullscreen="true"] .all-apps-view-list { gap: 24px 16px; }
+.apps-menu[data-fullscreen="true"] .app,
+.apps-menu[data-fullscreen="true"] .folder { aspect-ratio: auto; min-height: 132px; grid-template-rows: 76px 2.8rem; gap: 10px; padding: 10px; }
+.apps-menu[data-fullscreen="true"] .app .app-icon { width: 76px; height: 76px; box-shadow: none; }
+.apps-menu[data-fullscreen="true"] .app-name,
+.apps-menu[data-fullscreen="true"] .folder-name { font-size: 0.8125rem; line-height: 1.4; }
+@media (max-width: 1100px) { .apps-menu[data-fullscreen="true"] { --columns: 6; } }
+@media (max-width: 800px) { .apps-menu[data-fullscreen="true"] { --columns: 4; } }
+@media (max-width: 520px) {
+  .apps-menu[data-fullscreen="true"] { --columns: 3; }
+  .apps-menu[data-fullscreen="true"] .all-apps-view,
+  .apps-menu[data-fullscreen="true"] .pinned-view { padding: 12px; }
+}
+.app, .folder { border-radius: 18px; }
+.app:hover, .folder:hover,
+.app[aria-selected="true"], .folder[aria-selected="true"] { background-color: var(--tile-hover); outline: 0; }
+.app:focus-visible, .folder:focus-visible { outline: 2px solid var(--accent); }
+
+/* ---- Switches, radio rows, network and hotspot lists: macOS look ---- */
+input[type="checkbox"][data-skin="switch"] {
+  width: 38px;
+  height: 22px;
+  background-color: rgb(120 124 150 / 0.45);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.10);
+  transition: background-color 180ms ease;
+}
+input[type="checkbox"][data-skin="switch"]::before {
+  width: 18px;
+  height: 18px;
+  top: 2px;
+  left: 2px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35), 0 0 0 0.5px rgb(0 0 0 / 0.08);
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+input[type="checkbox"][data-skin="switch"]:checked { background-color: var(--accent); box-shadow: none; }
+input[type="checkbox"][data-skin="switch"]:checked::before { transform: translateX(16px); }
+input[type="checkbox"][data-skin="switch"]:hover:enabled { filter: brightness(1.06); background-color: rgb(120 124 150 / 0.55); }
+input[type="checkbox"][data-skin="switch"]:checked:hover:enabled { background-color: var(--accent); }
+
+.network-popup .network-radio-control,
+.hotspot-view .hotspot-info {
+  background-color: var(--tile);
+  box-shadow: none;
+  border-radius: var(--radius-m);
+  padding: 10px 12px;
+}
+.network-popup .network-radio-control .network-radio-label { font-weight: 600; }
+.network-popup .network-section:not(:last-child) { border-color: var(--mat-rim); }
+.network-popup .network-section-title { text-transform: none; letter-spacing: 0; font-size: 0.75rem; font-weight: 600; color: var(--fg-2); }
+.network-popup .wlan-entry,
+.network-popup .hotspot-entry { border-radius: 10px; }
+.network-popup .wlan-entry:hover,
+.network-popup .hotspot-entry:hover { background-color: var(--tile-hover); }
+.network-popup .wlan-entry.wlan-entry-selected { background-color: var(--tile); }
+.network-popup .wlan-entry .wlan-entry-band { background-color: var(--tile); }
+.network-popup .hotspot-entry-status { color: var(--fg-3); }
+.network-popup .hotspot-entry-status.hotspot-entry-status-on { color: var(--fg); }
+
+/* any remaining "raised" surface from the stock theme becomes a flat tonal tile */
+.quick-settings .quick-settings-section,
+.media-popup .media-session,
+.bluetooth-popup .bluetooth-radio-control { background-color: var(--tile); box-shadow: none; }

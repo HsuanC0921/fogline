@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="16 16 480 480">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fdcc8"/><stop offset="1" stop-color="#0f7f7a"/></linearGradient>
+    <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="white" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#e2f4f1"/></linearGradient>
+    <linearGradient id="side" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0b5f5b" stop-opacity=".16"/><stop offset=".25" stop-color="#0b5f5b" stop-opacity="0"/><stop offset=".75" stop-color="#0b5f5b" stop-opacity="0"/><stop offset="1" stop-color="#0b5f5b" stop-opacity=".16"/></linearGradient>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg)"/>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#mist)"/>
+  <ellipse cx="256" cy="404" rx="110" ry="14" fill="#06403d" fill-opacity=".22"/>
+
+  <!-- contents: a sheet with a folded corner and two crumpled paper balls, peeking out under the open lid -->
+  <g transform="rotate(-10 236 160)">
+    <path d="M190 96h76l28 28v96H190z" fill="#fff6dc"/>
+    <path d="M266 96v28h28z" fill="#e8d7a6"/>
+    <path d="M208 140h62M208 162h70M208 184h50" stroke="#d2bf86" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <circle cx="306" cy="172" r="40" fill="#e3edff"/>
+  <path d="M280 160l22 12-8 22M314 144l-6 26 24 8" fill="none" stroke="#9fb5e3" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="196" cy="180" r="32" fill="#ffdfe5"/>
+  <path d="M176 172l18 10 12-16M194 182l-2 18" fill="none" stroke="#e3a1af" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M158 190h196l-14 178a32 32 0 0 1-32 30H204a32 32 0 0 1-32-30z" fill="url(#white)"/>
+  <path d="M158 190h196l-14 178a32 32 0 0 1-32 30H204a32 32 0 0 1-32-30z" fill="url(#side)"/>
+  <path d="M212 228l6 128M256 228v128M300 228l-6 128" stroke="#0f7f7a" stroke-opacity=".32" stroke-width="14" stroke-linecap="round"/>
+  <path d="M152 190h208" stroke="#06403d" stroke-opacity=".14" stroke-width="6"/>
+
+  <!-- lid lifted off and tilted, resting on the pile -->
+  <g transform="translate(8 -62) rotate(-9 256 160)">
+    <rect x="222" y="116" width="68" height="32" rx="16" fill="none" stroke="#fff" stroke-width="14"/>
+    <rect x="140" y="140" width="232" height="40" rx="20" fill="url(#white)"/>
+  </g>
+  <rect x="17" y="17" width="478" height="478" rx="111" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2"/>
+</svg>

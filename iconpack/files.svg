@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="16 16 480 480">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc0ff"/><stop offset="1" stop-color="#2563dc"/></linearGradient>
+    <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="front" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#e3edff"/></linearGradient>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg)"/>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#mist)"/>
+  <path d="M112 152a24 24 0 0 1 24-24h76l28 30h136a24 24 0 0 1 24 24v32H112z" fill="#fff" fill-opacity=".6"/>
+  <rect x="112" y="196" width="288" height="196" rx="26" fill="url(#front)"/>
+  <path d="M144 296h224" stroke="#2563dc" stroke-opacity=".55" stroke-width="10" stroke-linecap="round"/>
+  <rect x="17" y="17" width="478" height="478" rx="111" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2"/>
+</svg>

@@ -1,0 +1,18 @@
+id: "@hsuan/fogline-launcher"
+metadata:
+  displayName: !extend i18n/display_name.yml
+  description: !extend i18n/description.yml
+icon: RiFoggyFill
+target: "@seelen/fancy-toolbar"
+plugin:
+  scopes:
+    - FocusedApp
+  template: |
+    const content = (() => {
+    return icon("RiFoggyFill")
+    })();
+    return Group({content, style: focusedApp?.title === "@hsuan/fogline-menu" ? {"--fogline-open": "1"} : {}});
+  tooltip: |-
+    const k = 2; // fogline:lang
+    return ["Fogline Menu", "Fogline メニュー", "Fogline 選單"][k] + " · Alt + Shift + Space"
+  onClickV2: trigger("@hsuan/fogline-menu")

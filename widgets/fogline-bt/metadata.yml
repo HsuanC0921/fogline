@@ -1,0 +1,11 @@
+id: "@hsuan/fogline-bt"
+icon: LuBluetooth
+metadata:
+  displayName: !extend i18n/display_name.yml
+  description: !extend i18n/description.yml
+preset: Popup
+instances: Single
+lazy: true
+html: !include index.html
+js: !include index.js
+css: !include index.css

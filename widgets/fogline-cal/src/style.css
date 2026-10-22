@@ -1,0 +1,88 @@
+/* Calendar in the manner of the macOS Calendar widget: accent month name, small weekday row,
+   today as a filled accent disc behind the number, lunar dates and holidays underneath. */
+.fcal-box { box-sizing: border-box; width: 320px; padding: 12px; border-radius: 26px; display: flex; flex-direction: column; gap: 6px; }
+.fcal-box button { font: inherit; }
+
+.fcal-head { display: flex; align-items: center; justify-content: space-between; padding: 0 0 2px; }
+.fcal-title { all: unset; display: flex; align-items: baseline; gap: 6px; padding: 4px 8px; border-radius: 10px; cursor: default; }
+.fcal-title:hover { background: var(--tile-hover); }
+.fcal-title-m { font-size: 1.0625rem; font-weight: 700; color: var(--accent); }
+.fcal-title-y { font-size: 1.0625rem; font-weight: 500; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.fcal-title svg { align-self: center; transform: rotate(90deg); color: var(--fg-3); transition: transform 160ms ease; }
+.fcal-title.open svg { transform: rotate(-90deg); }
+.fcal-nav { display: flex; align-items: center; gap: 2px; }
+.fcal-btn { all: unset; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; color: var(--fg-2); cursor: default; }
+.fcal-btn:hover:enabled { background: var(--tile-hover); color: var(--fg); }
+.fcal-btn:disabled { opacity: 0.4; }
+.fcal-today { all: unset; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; color: var(--fg-2); cursor: default; }
+.fcal-today:hover { background: var(--tile-hover); color: var(--fg); }
+
+.fcal-grid { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 2px; }
+.fcal-wd { text-align: center; font-size: 0.6875rem; font-weight: 700; color: var(--fg-3); padding: 2px 0 4px; }
+.fcal-cell { all: unset; box-sizing: border-box; height: 42px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border-radius: 12px; cursor: default; }
+.fcal-cell:hover { background: var(--tile-hover); }
+.fcal-n { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; font-size: 0.875rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.fcal-l { font-size: 0.625rem; color: var(--fg-3); line-height: 1; max-width: 100%; overflow: hidden; white-space: nowrap; }
+.fcal-l.m { color: var(--fg-2); font-weight: 700; }
+.fcal-cell.we .fcal-n { color: var(--fg-2); }
+.fcal-cell.off { opacity: 0.38; }
+.fcal-cell.sel { background: var(--tile); box-shadow: inset 0 0 0 0.5px var(--mat-rim); }
+.fcal-cell.today .fcal-n { background: var(--accent); color: var(--on-accent); font-weight: 700; }
+.fcal-cell.hol .fcal-n { color: var(--holiday); }
+.fcal-cell.today.hol .fcal-n { color: var(--on-accent); }
+.fcal-cell.hol .fcal-l.h { color: var(--holiday); font-weight: 600; }
+.fcal-cell.work .fcal-l.h { color: var(--makeup); font-weight: 600; }
+
+/* year/month picker */
+.fcal-jump { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 8px; font-size: 0.75rem; color: var(--fg-2); }
+.fcal-date-input { border: 0; border-radius: 8px; padding: 5px 8px; background: var(--tile); color: var(--fg); font: inherit; color-scheme: inherit; }
+.fcal-months { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 2px 0 4px; }
+.fcal-month { all: unset; height: 48px; display: grid; place-items: center; border-radius: 14px; font-size: 0.875rem; font-weight: 500; background: var(--tile); cursor: default; }
+.fcal-month:hover { background: var(--tile-hover); }
+.fcal-month.today { color: var(--accent); font-weight: 700; }
+.fcal-month.on { background: var(--accent); color: var(--on-accent); font-weight: 700; }
+
+/* the selected day */
+.fcal-info { padding: 9px 12px; border-radius: 14px; background: var(--tile); box-shadow: inset 0 0 0 0.5px var(--mat-rim); display: flex; flex-direction: column; gap: 2px; }
+.fcal-info-main { font-size: 0.8125rem; font-weight: 700; }
+.fcal-info-sub { font-size: 0.6875rem; color: var(--fg-2); }
+.fcal-info-hol { font-size: 0.75rem; font-weight: 600; color: var(--holiday); }
+.fcal-info-hol.work { color: var(--makeup); }
+
+/* collapsible holidays section */
+.fcal-details summary { list-style: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-radius: 8px; font-size: 0.6875rem; font-weight: 700; color: var(--fg-3); cursor: default; }
+.fcal-details summary::-webkit-details-marker { display: none; }
+.fcal-details summary::after { content: ""; width: 7px; height: 7px; border: solid currentColor; border-width: 0 1.6px 1.6px 0; transform: rotate(-45deg); transition: transform 160ms ease; }
+.fcal-details[open] summary::after { transform: rotate(45deg); }
+.fcal-details summary:hover { color: var(--fg-2); }
+.fcal-next { display: flex; flex-direction: column; }
+.fcal-next-head { display: none; }
+.fcal-next-row { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; min-height: 28px; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; cursor: default; }
+.fcal-next-row:hover { background: var(--tile-hover); }
+.fcal-next-date { width: 38px; color: var(--holiday); font-weight: 600; font-variant-numeric: tabular-nums; }
+.fcal-next-name { flex: 1; min-width: 0; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fcal-next-in { flex: none; }
+.fcal-next-in { color: var(--fg-3); }
+.fcal-chips { display: flex; align-items: center; gap: 4px; padding: 6px 8px 0; }
+.fcal-chips-label { font-size: 0.6875rem; color: var(--fg-3); margin-right: auto; }
+.fcal-chip { all: unset; padding: 3px 10px; border-radius: 10px; font-size: 0.6875rem; font-weight: 500; color: var(--fg-2); background: var(--tile); cursor: default; }
+.fcal-chip:hover { background: var(--tile-hover); }
+.fcal-chip.on { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.fcal-source { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 0 8px; gap: 8px; color: var(--fg-3); font-size: 0.6875rem; }
+.fcal-sep { height: 1px; margin: 4px 8px; background: color-mix(in oklab, var(--fg) 13%, transparent); }
+.fcal-link { all: unset; box-sizing: border-box; display: flex; align-items: center; min-height: 28px; padding: 3px 8px; border-radius: 8px; font-size: 0.8125rem; color: var(--fg); cursor: default; }
+.fcal-link svg { display: none; }
+.fcal-link:hover { background: var(--tile-hover); }
+
+/* region picker */
+.fcal-region { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 8px; min-height: 28px; margin-top: 4px; padding: 3px 8px; border-radius: 8px; font-size: 0.75rem; cursor: default; }
+.fcal-region:hover { background: var(--tile-hover); }
+.fcal-region-name { margin-left: auto; font-weight: 600; }
+.fcal-region svg { color: var(--fg-3); transform: rotate(90deg); transition: transform 160ms ease; flex: none; }
+.fcal-region[aria-expanded="true"] svg { transform: rotate(-90deg); }
+.fcal-countries { max-height: 176px; overflow-y: auto; display: flex; flex-direction: column; padding: 2px 0; }
+.fcal-country { all: unset; box-sizing: border-box; flex: none; display: flex; align-items: center; justify-content: space-between; min-height: 28px; padding: 3px 8px; border-radius: 8px; font-size: 0.75rem; cursor: default; }
+.fcal-country:hover { background: var(--tile-hover); }
+.fcal-country.on { font-weight: 700; color: var(--accent); }
+.fcal-code { color: var(--fg-3); font-size: 0.6875rem; }
+.fcal-l { text-overflow: ellipsis; }

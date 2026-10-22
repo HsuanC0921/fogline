@@ -1,0 +1,71 @@
+{
+  "activeThemes": [
+    "@default/theme",
+    "@hsuan/fogline"
+  ],
+  "activeIconPacks": [
+    "@system/icon-pack",
+    "@hsuan/fogline-icons"
+  ],
+  "backupSyncEnabled": false,
+  "suspendOnGameMode": true,
+  "pollingInterval": 10,
+  "byWidget": {
+    "@hsuan/fogline-menu": {
+      "enabled": true
+    },
+    "@hsuan/fogline-lantern": {
+      "enabled": true
+    },
+    "@hsuan/fogline-input": {
+      "enabled": true
+    },
+    "@hsuan/fogline-net": {
+      "enabled": true
+    },
+    "@hsuan/fogline-bt": {
+      "enabled": true
+    },
+    "@hsuan/fogline-cc": {
+      "enabled": true
+    },
+    "@hsuan/fogline-cal": {
+      "enabled": true
+    },
+    "@seelen/apps-menu": {
+      "enabled": true,
+      "defaultView": "all"
+    },
+    "@seelen/fancy-toolbar": {
+      "enabled": true,
+      "position": "Top",
+      "hideMode": "Never",
+      "itemSize": 16,
+      "padding": 4,
+      "margin": 0
+    },
+    "@seelen/weg": {
+      "enabled": true,
+      "mode": "MinContent",
+      "position": "Bottom",
+      "hideMode": "Never",
+      "size": 48,
+      "padding": 6,
+      "margin": 6,
+      "spaceBetweenItems": 4,
+      "middleClickAction": "CloseApp"
+    },
+    "@seelen/flyouts": {
+      "enabled": true,
+      "placement": "top-right",
+      "margin": 4,
+      "timeToShow": 5
+    },
+    "@hsuan/fogline-notifications": {
+      "enabled": true
+    },
+    "@hsuan/fogline-tray": {
+      "enabled": true
+    }
+  }
+}

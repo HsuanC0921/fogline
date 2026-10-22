@@ -1,0 +1,16 @@
+id: "@hsuan/fogline-menu"
+icon: RiFoggyFill
+metadata:
+  displayName: !extend i18n/display_name.yml
+  description: !extend i18n/description.yml
+preset: Popup
+instances: Single
+lazy: true
+html: !include index.html
+js: !include index.js
+css: !include index.css
+shortcuts:
+  - id: menu-open
+    command: ["widget", "trigger", "${self.id}"]
+    label: Open Fogline menu
+    defaultKeys: ["Alt", "Shift", "Space"]

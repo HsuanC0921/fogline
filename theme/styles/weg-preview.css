@@ -1,0 +1,15 @@
+/* Dock hover previews: one glass pane, each window a quiet tile with its thumbnail */
+.weg-item-preview-container {
+  margin: 6px 12px 14px;
+  padding: 8px;
+  background: var(--mat-regular);
+  border: 1px solid var(--mat-rim);
+  border-radius: 22px;
+  box-shadow: var(--mat-shadow), inset 0 1px 0 var(--mat-hi), var(--mat-glow);
+  color: var(--fg);
+}
+.weg-item-preview-container .weg-item-preview-list { gap: 8px; }
+.weg-item-preview-container .weg-item-preview { padding: 8px; gap: 8px; border-radius: 14px; background: var(--tile); box-shadow: none; transition: background-color 120ms ease-out; }
+.weg-item-preview-container .weg-item-preview:hover { background: var(--tile-hover); }
+.weg-item-preview-container .weg-item-preview-title { font-size: 0.75rem; font-weight: 600; }
+.weg-item-preview-container .weg-item-preview-image-container { border-radius: 10px; background: rgb(0 0 0 / 0.22); box-shadow: inset 0 0 0 0.5px var(--mat-rim); }

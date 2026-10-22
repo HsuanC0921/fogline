@@ -1,0 +1,69 @@
+/* Notification Centre as in macOS: no panel behind, each notification its own glass card with the app's
+   icon on the left, one app's notifications stacked into a deck, the close button on the card's top-left corner. */
+html, body { background: transparent; overflow: hidden; }
+.fn-box { box-sizing: border-box; width: 372px; margin-left: auto; padding: 5px 8px 14px; display: flex; flex-direction: column; gap: 10px; color: var(--fg); font-size: 0.8125rem; }
+.fn-box button { font: inherit; cursor: default; }
+.fn-glass { background: var(--mat-regular); border: 1px solid var(--mat-rim); box-shadow: var(--mat-shadow), inset 0 1px 0 var(--mat-hi), var(--mat-glow); }
+
+.fn-header { display: flex; align-items: center; gap: 4px; min-height: 36px; box-sizing: border-box; padding: 4px 6px 4px 14px; border-radius: 18px; }
+.fn-header h1 { margin: 0; font-size: 0.8125rem; font-weight: 700; white-space: nowrap; }
+.fn-count { flex: 1; color: var(--fg-3); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.fn-icon { all: unset; flex: none; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; color: var(--fg-2); }
+.fn-icon:hover:enabled { background: var(--tile-hover); color: var(--fg); }
+.fn-icon:disabled { opacity: 0.35; }
+.fn-icon[aria-pressed="true"] { background: #7d5cf0; color: #fff; }
+.fn-dnd { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 16px; font-size: 0.75rem; color: var(--fg-2); }
+.fn-dnd svg { color: #7d5cf0; flex: none; }
+
+.fn-list { max-height: 620px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 10px; padding: 8px 8px 12px; margin: -8px -8px -12px; scrollbar-width: none; }
+.fn-list::-webkit-scrollbar { display: none; }
+
+.fn-card { position: relative; border-radius: 20px; flex: none; }
+/* a deck: the next two notifications peek out underneath as narrower sheets; they stop at the card's lower edge, because the card is see-through */
+.fn-card.stacked[data-depth] { margin-bottom: 8px; }
+.fn-card.stacked[data-depth]::after, .fn-card.stacked[data-depth="2"]::before {
+  content: ""; position: absolute; z-index: -1; left: 10px; right: 10px; bottom: -7px; height: 7px; border-radius: 0 0 12px 12px;
+  background: var(--mat-regular); border: 1px solid var(--mat-rim); border-top: 0; opacity: 0.85;
+}
+.fn-card.stacked[data-depth="2"]::before { left: 20px; right: 20px; bottom: -13px; height: 6px; opacity: 0.6; }
+
+.fn-main { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: flex-start; gap: 11px; padding: 11px 14px 12px 12px; border-radius: 20px; }
+.fn-logo { flex: none; width: 34px; height: 34px; border-radius: 9px; object-fit: contain; margin-top: 1px; }
+.fn-logo-text { display: grid; place-items: center; background: linear-gradient(160deg, color-mix(in oklab, var(--accent) 80%, white), var(--accent)); color: var(--on-accent); font-size: 0.9375rem; font-weight: 700; }
+.fn-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.fn-head { display: flex; align-items: baseline; gap: 8px; }
+.fn-app { flex: 1; min-width: 0; font-size: 0.6875rem; font-weight: 600; color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fn-time { flex: none; font-size: 0.6875rem; color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.fn-body p { margin: 0; overflow-wrap: anywhere; }
+.fn-title { font-weight: 700; line-height: 1.35; margin-top: 1px !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fn-text { color: var(--fg-2); line-height: 1.4; white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.fn-card.stacked .fn-text { -webkit-line-clamp: 2; }
+.fn-more { margin-top: 3px !important; font-size: 0.6875rem; color: var(--fg-3); }
+.fn-hero { margin-top: 8px; width: 100%; max-height: 160px; object-fit: cover; border-radius: 10px; }
+
+.fn-close { all: unset; position: absolute; z-index: 1; top: -6px; left: -6px; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 50%; background: var(--mat-regular); color: var(--fg-2); box-shadow: 0 1px 3px rgb(0 0 0 / 0.28), inset 0 0 0 0.5px var(--mat-rim); opacity: 0; transition: opacity 120ms ease; }
+.fn-card:hover .fn-close, .fn-close:focus-visible { opacity: 1; }
+.fn-close:hover { color: var(--fg); }
+
+.fn-actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 12px 57px; margin-top: -2px; }
+.fn-button { all: unset; flex: 1; text-align: center; padding: 6px 10px; border-radius: 999px; background: var(--tile); font-size: 0.75rem; font-weight: 600; }
+.fn-button:hover { background: var(--tile-hover); }
+.fn-input { flex: 1 1 100%; box-sizing: border-box; padding: 7px 12px; border: 0; border-radius: 999px; background: var(--tile); color: var(--fg); font: inherit; font-size: 0.75rem; outline: none; }
+.fn-input:focus { box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 60%, transparent); }
+
+.fn-group-head { display: flex; align-items: center; gap: 6px; padding: 2px 2px 0 6px; }
+.fn-group-name { flex: 1; min-width: 0; font-size: 0.9375rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgb(0 0 0 / 0.35); color: #fff; }
+.fn-pill { all: unset; padding: 4px 11px; border-radius: 999px; background: var(--mat-regular); box-shadow: inset 0 0 0 0.5px var(--mat-rim); font-size: 0.6875rem; font-weight: 600; }
+.fn-pill-icon { width: 22px; height: 22px; padding: 0; display: grid; place-items: center; }
+.fn-pill:hover { background: var(--tile-hover); }
+
+.fn-empty { min-height: 96px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--fg-3); }
+.fn-empty p { margin: 0; font-size: 0.75rem; }
+.fn-error { margin: 0; padding: 8px 14px; border-radius: 14px; color: var(--holiday); font-size: 0.75rem; }
+.fn-expanded .fn-title, .fn-expanded .fn-text { display: block; -webkit-line-clamp: unset; overflow: visible; }
+.fn-activation-note { display: flex; flex-direction: column; gap: 8px; padding: 0 14px 12px; color: var(--fg-2); font-size: .75rem; }
+.fn-activation-note p { margin: 0; line-height: 1.4; }
+.fn-box .fn-glass { border-color: transparent; box-shadow: var(--panel-shadow); }
+.fn-box .fn-glass:not([data-depth="2"])::before { padding: 1px; background: var(--panel-edge); }
+.fn-box .fn-group-head { background: var(--mat-regular); border-radius: 14px; padding: 6px 10px; }
+.fn-box .fn-group-name { color: var(--fg); text-shadow: none; }

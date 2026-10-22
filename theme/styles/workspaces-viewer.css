@@ -1,0 +1,23 @@
+/* Win+Tab overview, the Mission Control of this desktop: dimmed wallpaper, a glass strip of desktops on top,
+   open windows as tiles beneath. The active desktop is marked by an accent line, as the active Space is in macOS. */
+.workspaces-viewer { background-color: rgb(8 12 24 / 0.5); color: var(--fg); }
+.workspaces-viewer .monitor .active-wallpaper { filter: blur(24px) saturate(1.1); transform: scale(1.06); }
+.workspaces-viewer .monitor .workspaces {
+  background: var(--mat-regular);
+  border: 1px solid var(--mat-rim);
+  border-radius: 24px;
+  box-shadow: var(--mat-shadow), inset 0 1px 0 var(--mat-hi), var(--mat-glow);
+}
+.workspaces-viewer .workspaces .workspace,
+.workspaces-viewer .workspaces .add-workspace-column,
+.workspaces-viewer .workspaces .add-workspace-row {
+  border-radius: 16px; background: var(--tile); box-shadow: inset 0 0 0 0.5px var(--mat-rim);
+  transition: background-color 120ms ease-out, transform 160ms ease-out;
+}
+.workspaces-viewer .workspaces .workspace:hover, .workspaces-viewer .workspaces .add-workspace-column:hover, .workspaces-viewer .workspaces .add-workspace-row:hover { background: var(--tile-hover); }
+.workspaces-viewer .workspaces .workspace .workspace-preview { border-radius: 10px; }
+.workspaces-viewer .workspaces .workspace.workspace-viewing { transform: scale(1.03); }
+.workspaces-viewer .workspaces .workspace-name-input { font-size: 0.8125rem; color: var(--fg); }
+
+.workspaces-viewer .window { border-radius: 16px; background: var(--mat-regular); border: 1px solid var(--mat-rim); box-shadow: var(--mat-shadow); }
+.workspaces-viewer .window .window-header { border-bottom: 1px solid color-mix(in oklab, var(--fg) 13%, transparent); font-size: 0.75rem; }

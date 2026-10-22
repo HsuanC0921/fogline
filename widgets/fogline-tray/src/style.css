@@ -1,0 +1,16 @@
+@import "../../shared/menu.css";
+
+/* fixed cap: a vh cap would shrink with the auto-sized window and cut the list */
+.ftray { max-height: 640px; overflow-y: auto; scrollbar-width: none; }
+.ftray-row { padding: 0; gap: 0; }
+/* :where keeps the reset below the class rules that follow */
+:where(.ftray button) { all: unset; box-sizing: border-box; cursor: default; border-radius: 10px; }
+.ftray-app { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; min-height: 34px; padding: 4px 8px; }
+.ftray-app img, .ftray-noicon { width: 18px; height: 18px; object-fit: contain; flex: none; }
+.ftray-noicon { border-radius: 5px; background: var(--tile); }
+.ftray-app span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* pin only shows on hover unless the item is pinned */
+.ftray-pin { flex: none; display: grid; place-items: center; width: 28px; height: 28px; margin-right: 4px; color: var(--fg-3); opacity: 0; }
+.ftray-row:hover .ftray-pin, .ftray-pin:focus-visible, .ftray-pin[aria-pressed="true"] { opacity: 1; }
+.ftray-pin[aria-pressed="true"] { color: var(--accent); }
+.ftray-pin:hover:enabled { background: var(--tile-hover); color: var(--fg); }

@@ -1,0 +1,9 @@
+/* User menu: the popover supplies the glass; rows follow the menu-extra rhythm */
+.user-popup .user-label { text-transform: none; letter-spacing: 0; font-size: 0.6875rem; color: var(--fg-3); }
+.user-popup .user-profile-picture-fallback { background: var(--tile-hover); color: var(--fg-2); }
+.user-popup .user-profile-lock-button, .user-popup .user-profile-settings-button { background: var(--mat-regular); border-color: var(--mat-rim); color: var(--fg-2); }
+.user-popup .user-profile-email { color: var(--fg-2); }
+.user-popup .user-seelen-option-item, .user-directory .user-directory-summary, .user-directory .user-file { border-radius: 10px; }
+.user-popup .user-seelen-option-item .svg-icon { color: var(--fg-2); }
+.user-directory .user-file-date { color: var(--fg-3); }
+.user-directory .user-list-extender { color: var(--accent); }

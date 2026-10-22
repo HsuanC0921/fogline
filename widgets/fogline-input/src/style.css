@@ -1,0 +1,6 @@
+@import "../../shared/menu.css";
+
+/* input-source badge: a small rounded square with the source's glyph, as in the macOS input menu */
+.fi-badge { width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: 6px; background: var(--tile-hover); color: var(--fg); font-size: 0.75rem; font-weight: 700; line-height: 1; }
+.mx-row.on .fi-badge { background: var(--fg); color: var(--slu-std-bg-dark-color); }
+.mx-row:disabled:not(.on) { color: var(--fg-2); }

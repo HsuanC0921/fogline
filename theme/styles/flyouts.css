@@ -1,0 +1,28 @@
+/* Volume / brightness / workspace HUD and notification banners */
+.flyout {
+  margin: 5px 8px; /* the notification centre uses the same 5px / 8px insets and 10px gaps, so banner and centre line up */
+  padding: 10px 14px;
+  background: var(--mat);
+  border: 1px solid var(--mat-rim);
+  border-radius: 22px;
+  box-shadow: var(--mat-shadow), inset 0 1px 0 var(--mat-hi), var(--mat-glow);
+  color: var(--fg);
+}
+/* the window sits 4px from the corner so banners hug the edge; the first one drops below the menu bar */
+.flyout:first-child { margin-top: 26px; }
+.flyout .flyout-value-label { color: var(--fg-2); font-weight: 500; }
+
+/* banner: app name quiet on top, title bold, no divider, macOS notification proportions */
+.notification {
+  width: 356px;
+  padding: 12px 14px;
+  background: var(--mat);
+  border: 1px solid var(--mat-rim);
+  border-radius: 20px;
+  box-shadow: var(--mat-shadow), inset 0 1px 0 var(--mat-hi), var(--mat-glow);
+  color: var(--fg);
+  font-size: 0.8125rem;
+}
+.notification .notification-header { border-bottom: 0; margin-bottom: 4px; color: var(--fg-2); font-size: 0.75rem; }
+.notification .notification-header-info { font-weight: 500; }
+.notification .notification-body-logo-image { width: 2.5rem; height: 2.5rem; border-radius: 10px; }

@@ -1,0 +1,110 @@
+/* Control Center laid out on a 4-column grid like macOS: a connectivity module and Now Playing (2×2 each),
+   Focus (2×1) with two round actions, then the Display and Sound modules with their sliders. */
+.fc-box { --cell: 70px; --gap: 10px; box-sizing: border-box; width: calc(var(--cell) * 4 + var(--gap) * 3 + 24px); padding: 12px; border-radius: 32px; display: flex; flex-direction: column; gap: var(--gap); }
+.fc-box.slu-std-popover { border-color: transparent; box-shadow: var(--panel-shadow); }
+.fc-box.slu-std-popover::before { padding: 1px; background: var(--panel-edge); }
+.fc-warmth { display: flex; flex-direction: column; gap: 7px; padding-top: 5px; }
+.fc-warmth-disclosure { color: var(--fg-2); font-size: .6875rem; }
+.fc-warmth-head, .fc-warmth-ends { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: .6875rem; color: var(--fg-2); }
+.fc-warmth-head output { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.fc-warmth-ends { color: var(--fg-3); }
+.fc-warmth-range { appearance: none; width: 100%; height: 8px; margin: 8px 0; border-radius: 999px; background: linear-gradient(90deg, #6482a1, #d3a365); cursor: pointer; }
+.fc-warmth-range::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid #5e6e83; box-shadow: 0 1px 3px rgb(0 0 0 / .18); }
+@media (prefers-color-scheme: light) {
+  .fc-box .fc-module { background: rgb(255 255 255 / .40); box-shadow: inset 0 0 0 1px rgb(73 91 120 / .20), inset 0 1px 0 rgb(255 255 255 / .76); }
+  .fc-box .fc-toggle-sub, .fc-box .fc-out-name { color: var(--fg-2); }
+  .fc-warmth-range { background: linear-gradient(90deg, #426687, #9a6629); }
+  .fc-box .fc-range { background: linear-gradient(90deg, #405976 calc(12px + (100% - 24px) * var(--v, 0)), rgb(73 91 116 / .14) 0); box-shadow: inset 0 0 0 1px #5c6f89; }
+  .fc-box .fc-slider-glyph { color: #fff; }
+  .fc-box .fc-slider.low .fc-slider-glyph { color: #344158; }
+}
+button { font: inherit; }
+.fc-toggle, .fc-tile, .fc-ctl, .fc-slider-glyph, .fc-output, .fc-out { all: unset; box-sizing: border-box; cursor: default; }
+
+/* modules: a lighter pane of glass than the panel, lit from the top edge; 20px stays concentric with the 32px panel */
+.fc-module {
+  border-radius: 20px;
+  background: color-mix(in oklab, var(--fg) 9%, transparent);
+  box-shadow: inset 0 0 0 0.5px var(--mat-rim), inset 1px 2px 3px -2px rgb(255 255 255 / 0.45), inset -1px -2px 3px -2px rgb(255 255 255 / 0.2);
+}
+button.fc-module:hover:enabled { background: color-mix(in oklab, var(--fg) 15%, transparent); }
+
+.fc-top { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); height: calc(var(--cell) * 2 + var(--gap)); }
+.fc-box .fc-conn { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 8px; background: var(--mat-regular); }
+.fc-conn .fc-toggle { min-height: 42px; padding: 4px; gap: 10px; border-radius: 12px; }
+.fc-conn .fc-toggle:hover:enabled { background: var(--tile-hover); }
+.fc-conn .fc-toggle-text { flex: 1; }
+.fc-conn .fc-round svg { display: block; }
+.fc-conn-error { padding: 0 4px; color: var(--fg-2); font-size: .6875rem; overflow-wrap: anywhere; }
+.fc-conn .fc-toggle > svg { flex: none; margin-left: auto; color: var(--fg-3); opacity: 0; transition: opacity 120ms ease; }
+.fc-conn .fc-toggle:hover > svg { opacity: 1; }
+
+/* round glyph + title/state; the glyph fills with the accent when on */
+.fc-toggle { display: flex; align-items: center; gap: 8px; min-width: 0; border-radius: 14px; }
+.fc-round { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--tile-hover); color: var(--fg); transition: background-color 160ms ease; }
+.fc-toggle.on .fc-round { background: var(--accent); color: var(--on-accent); }
+.fc-toggle:hover:enabled .fc-round { filter: brightness(1.12); }
+.fc-toggle:disabled { opacity: 0.55; }
+.fc-toggle-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.fc-toggle-title { font-size: 0.75rem; font-weight: 700; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fc-toggle-sub { font-size: 0.6875rem; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* now playing: cover art blurred behind, transport controls at the bottom */
+.fc-np { position: relative; overflow: hidden; padding: 12px; display: flex; flex-direction: column; justify-content: flex-end; }
+.fc-np.idle { color: var(--fg-3); }
+.fc-np-bg { position: absolute; inset: -20px; width: calc(100% + 40px); height: calc(100% + 40px); object-fit: cover; filter: blur(22px) saturate(1.3); opacity: 0.75; }
+.fc-np-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(20 22 36 / 0.05), rgb(20 22 36 / 0.5)); }
+.fc-np-art { position: absolute; top: 12px; left: 12px; width: 42px; height: 42px; border-radius: 9px; object-fit: cover; box-shadow: 0 2px 8px rgb(0 0 0 / 0.3); }
+.fc-np-meta, .fc-np-ctl { position: relative; }
+.fc-np-title { font-size: 0.75rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; text-shadow: 0 1px 2px rgb(0 0 0 / 0.35); }
+.fc-np.idle .fc-np-title { color: var(--fg-2); text-shadow: none; }
+.fc-np-author { font-size: 0.6875rem; color: rgb(255 255 255 / 0.78); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fc-np-ctl { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+.fc-ctl { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; color: rgb(255 255 255 / 0.85); }
+.fc-np.idle .fc-ctl { color: var(--fg-3); }
+.fc-ctl:hover { background: rgb(255 255 255 / 0.18); }
+.fc-ctl.big { color: #fff; }
+
+.fc-row2 { display: grid; grid-template-columns: 1fr var(--cell) var(--cell); gap: var(--gap); height: var(--cell); }
+.fc-focus { padding: 0 12px; }
+.fc-focus.on .fc-round { background: #7d5cf0; color: #fff; }
+.fc-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; color: var(--fg); }
+.fc-tile-label { font-size: 0.6875rem; font-weight: 600; color: var(--fg-2); }
+.fc-tile.on { background: var(--accent); color: var(--on-accent); }
+.fc-tile.on .fc-tile-label { color: var(--on-accent); }
+
+/* display and sound modules */
+.fc-card { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+.fc-label { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 700; color: var(--fg); }
+.fc-sublabel { font-size: 0.6875rem; color: var(--fg-2); overflow-wrap: anywhere; }
+.fc-out { width: 100%; }
+.fc-out-name { flex: 1; font-weight: 500; font-size: 0.6875rem; color: var(--fg-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fc-out svg { color: var(--fg-3); flex: none; transition: transform 160ms ease; }
+/* appearance and eye care: two sub-buttons inside the Display module */
+.fc-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px; }
+.fc-chip { padding: 6px 8px; border-radius: 14px; background: color-mix(in oklab, var(--fg) 7%, transparent); }
+.fc-chip:hover:enabled { background: color-mix(in oklab, var(--fg) 12%, transparent); }
+.fc-chip .fc-round { width: 26px; height: 26px; }
+
+/* macOS slider: a thick rounded track that fills white from the left, its round end doubling as the knob,
+   the glyph riding inside the fill */
+.fc-slider { position: relative; display: flex; align-items: center; height: 24px; }
+.fc-slider.dim { opacity: 0.6; }
+.fc-range { -webkit-appearance: none; appearance: none; width: 100%; height: 24px; margin: 0; border-radius: 12px; outline: none; cursor: default;
+  background: linear-gradient(90deg, #fff calc(12px + (100% - 24px) * var(--v, 0)), color-mix(in oklab, var(--fg) 12%, transparent) 0); box-shadow: inset 0 0 0 0.5px var(--mat-rim); }
+.fc-range::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: -1px 0 0 0.5px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.22); }
+.fc-range:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+.fc-slider-glyph { position: absolute; left: 6px; width: 16px; height: 16px; display: grid; place-items: center; color: #4a5470; z-index: 1; border-radius: 50%; }
+
+.fc-outputs { display: flex; flex-direction: column; margin-top: 2px; }
+.fc-output { display: flex; align-items: center; gap: 8px; min-height: 30px; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; color: var(--fg-2); }
+.fc-output span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fc-output:hover { background: var(--tile-hover); color: var(--fg); }
+.fc-output.on { color: var(--fg); font-weight: 600; }
+
+button.fc-module, .fc-chip, .fc-toggle .fc-round, .fc-ctl { transition: background-color 120ms ease-out, transform 120ms ease-out, filter 120ms ease-out; }
+button.fc-module:active:enabled, .fc-chip:active:enabled { transform: scale(0.97); }
+.fc-toggle:active:enabled .fc-round { transform: scale(0.92); }
+.fc-ctl:active { transform: scale(0.88); }
+.fc-range::-webkit-slider-thumb { transition: transform 120ms ease-out; }
+.fc-range:active::-webkit-slider-thumb { transform: scale(1.06); }

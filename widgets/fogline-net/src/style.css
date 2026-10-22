@@ -1,0 +1,13 @@
+@import "../../shared/menu.css";
+
+/* joining a network in place, under its row */
+.net-join { margin: 2px 4px 6px 44px; display: flex; flex-direction: column; gap: 6px; }
+.net-input { box-sizing: border-box; width: 100%; padding: 6px 10px; border: 0; border-radius: 8px; background: var(--tile); color: var(--fg); font: inherit; font-size: 0.8125rem; outline: none; }
+.net-input:focus { box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 60%, transparent); }
+.net-error { margin: 0; font-size: 0.6875rem; color: var(--holiday); }
+.net-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.net-detail-actions { padding: 2px 8px 6px; }
+.net-btn { all: unset; padding: 4px 12px; border-radius: 999px; background: var(--tile); font-size: 0.75rem; font-weight: 600; cursor: default; }
+.net-btn:hover:enabled { background: var(--tile-hover); }
+.net-btn:disabled { opacity: 0.6; }
+.net-btn.primary { background: var(--accent); color: var(--on-accent); }

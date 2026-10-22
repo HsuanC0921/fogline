@@ -1,0 +1,23 @@
+id: "@hsuan/fogline-notifications"
+metadata:
+  displayName: !extend i18n/display_name.yml
+  description: !extend i18n/description.yml
+icon: LuMenu
+target: "@seelen/fancy-toolbar"
+plugin:
+  scopes:
+    - FocusedApp
+    - Notifications
+  template: |
+    const dnd = typeof dndActive !== "undefined" && !!dndActive;
+    const style = {};
+    if (focusedApp?.title === "@hsuan/fogline-notifications") style["--fogline-open"] = "1";
+    if (dnd) style["--fogline-focus"] = "1";
+    return Group({content: icon(dnd ? "LuMoon" : "LuMenu"), style});
+  badge: |
+    return count > 99 ? "99+" : count > 0 ? count : null
+  tooltip: |
+    const k = 2; // fogline:lang
+    const dnd = typeof dndActive !== "undefined" && dndActive;
+    return ["Notification Centre", "通知センター", "通知中心"][k] + " · " + (dnd ? ["Do Not Disturb", "おやすみモード", "勿擾中"][k] + " · " : "") + (count > 0 ? [count + " notifications", count + "件の通知", count + " 則通知"][k] : ["No notifications", "通知なし", "沒有通知"][k])
+  onClickV2: trigger("@hsuan/fogline-notifications")

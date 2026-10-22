@@ -1,0 +1,29 @@
+id: "@hsuan/fogline-icons"
+metadata:
+  displayName: !extend i18n/display_name.yml
+  description: !extend i18n/description.yml
+  appTargetVersion: [2, 8, 8]
+entries:
+  - type: custom
+    key: "@seelen/weg::start-menu"
+    icon: { base: start.svg, isAproximatelySquare: true }
+  - type: custom
+    key: "@seelen/weg::show-desktop"
+    icon: { base: desktop.svg, isAproximatelySquare: true }
+  - type: custom
+    key: "bin::empty"
+    icon: { base: bin-empty.svg, isAproximatelySquare: true }
+  - type: custom
+    key: "bin::full"
+    icon: { base: bin-full.svg, isAproximatelySquare: true }
+  - type: unique
+    umid: Microsoft.Windows.Explorer
+    path: C:\WINDOWS\explorer.exe
+    icon: { base: files.svg, isAproximatelySquare: true }
+  - type: unique
+    umid: 49306atecsolution.FilesUWP_et10x9a9vyk8t!App
+    icon: { base: files.svg, isAproximatelySquare: true }
+  - type: unique
+    umid: windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel
+    path: C:\Windows\ImmersiveControlPanel\SystemSettings.exe
+    icon: { base: settings.svg, isAproximatelySquare: true }
