@@ -56,6 +56,25 @@ foreach ($name in 'fogline-menu','fogline-lantern','fogline-input','fogline-net'
   "Widget  -> $widgetDir"
 }
 
+# Remove only the obsolete Fogline WEG override. The native Seelen WEG bundle
+# depends on internal widget APIs and cannot be hosted as a ThirdParty overlay.
+$wegTarget = Join-Path $data 'widgets\fogline-seelen-weg-override'
+$markerPath = Join-Path $wegTarget 'MANAGED_BY_FOGLINE'
+$managedByFogline = 'fogline-seelen-weg-override@2.8.10.0'
+if ((Test-Path -LiteralPath $markerPath) -and
+    ([IO.File]::ReadAllText($markerPath).Trim() -eq $managedByFogline)) {
+  $widgetsRoot = [IO.Path]::GetFullPath((Join-Path $data 'widgets')).TrimEnd('\') + '\'
+  $resolvedWegTarget = [IO.Path]::GetFullPath($wegTarget)
+  if (-not $resolvedWegTarget.StartsWith($widgetsRoot, [StringComparison]::OrdinalIgnoreCase) -or
+      [IO.Path]::GetFileName($resolvedWegTarget) -ne 'fogline-seelen-weg-override') {
+    throw 'Refusing to remove an unexpected Fogline Dock override path.'
+  }
+  Remove-Item -LiteralPath $resolvedWegTarget -Recurse -Force
+  'Removed the incompatible Fogline Dock override; Seelen UI will use its native WEG widget.'
+} elseif (Test-Path -LiteralPath $wegTarget) {
+  Write-Warning 'An unmarked Dock override was left untouched.'
+}
+
 $nativeDir = Join-Path $data 'fogline-native'
 New-Item -ItemType Directory -Force $nativeDir | Out-Null
 # A previous bridge restores its own color transform before exiting.

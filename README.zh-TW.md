@@ -34,6 +34,8 @@ cd fogline
 
 腳本會先停止 Seelen 的 watchdog 與 UI，安裝資源，合併建議設定、取代頂欄排列，再重新啟動 Seelen。安裝前可先查看 [settings.example.json](settings.example.json) 與 [toolbar-layout.yml](toolbar-layout.yml)，確認要套用的桌面配置。
 
+Fogline 保留 Seelen 原生 Dock，並在主題中隱藏 Windows 工作列徽章，因為這些由 App 提供的提示並非經確認的未讀總數。安裝器只會移除先前那份帶有 Fogline 標記的不相容 Dock 覆寫，不會動到未標記資源。
+
 | 選項 | 作用 |
 | --- | --- |
 | `-ThemeOnly` | 略過建議設定／頂欄合併；仍安裝 Fogline 資源並重啟 Seelen |

@@ -34,6 +34,8 @@ cd fogline
 
 The installer stops Seelen's watchdog and UI before writing files, installs resources, merges the recommended settings, replaces the menu-bar layout and restarts Seelen. Inspect [settings.example.json](settings.example.json) and [toolbar-layout.yml](toolbar-layout.yml) before applying this desktop configuration.
 
+Fogline keeps Seelen's native Dock and hides Windows taskbar overlay badges in its theme because those app-provided hints are not verified unread totals. The installer removes only the obsolete marked Fogline Dock override and leaves unmarked resources untouched.
+
 | Option | Effect |
 | --- | --- |
 | `-ThemeOnly` | Skip recommended settings/layout; still install Fogline resources and restart Seelen |
