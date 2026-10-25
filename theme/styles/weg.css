@@ -90,30 +90,31 @@
   width: 4px;
 }
 
-/* App-provided numbers, glyphs and overlay images share one quiet status dot.
-   Its presence is preserved without presenting mixed sources as unread totals. */
-.weg-item-overlay .weg-item-badge,
-.weg-item-overlay .weg-item-badge:has(img) {
+/* Normalize plain-text counts only. Image, glyph and status-color badges keep
+   Seelen's original styles so their app-provided artwork is not painted over. */
+.weg-item-overlay .weg-item-badge:not(:has(*)) {
   box-sizing: border-box;
-  top: 3px;
-  right: 3px;
-  translate: none;
-  width: 8px;
-  min-width: 8px;
-  height: 8px;
-  padding: 0;
-  border: 1px solid var(--mat-rim);
-  border-radius: 50%;
+  top: 0;
+  right: 0;
+  translate: 25% -25%;
+  width: auto;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 999px;
   background-color: var(--badge);
-  color: transparent;
-  font-size: 0;
-  line-height: 0;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
   box-shadow: none;
   pointer-events: none;
   scale: calc(1 / var(--mag));
   transition: opacity 180ms ease-out, scale 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.weg-item-overlay .weg-item-badge > * { visibility: hidden; }
 
 .weg-separator { border-color: var(--mat-rim) !important; }
 
