@@ -34,7 +34,7 @@ cd fogline
 
 腳本會先停止 Seelen 的 watchdog 與 UI，安裝資源，合併建議設定、取代頂欄排列，再重新啟動 Seelen。安裝前可先查看 [settings.example.json](settings.example.json) 與 [toolbar-layout.yml](toolbar-layout.yml)，確認要套用的桌面配置。
 
-Fogline 保留 Seelen 原生 Dock 並顯示其 App 徽章。徽章可能代表程式狀態、App 提供的數字或 Windows 通知，不保證等於 App 內的未讀總數；視窗數量徽章則維持關閉。安裝器只會移除先前那份帶有 Fogline 標記的不相容 Dock 覆寫，不會動到未標記資源。
+Fogline 保留 Seelen 原生 Dock，將 App 徽章統一顯示為小紅點。紅點表示 Seelen 回報這個 App 有徽章，來源可能是程式狀態、App 提供的數字或 Windows 通知，不代表經確認的未讀數；視窗數量徽章則維持關閉。安裝器只會移除先前那份帶有 Fogline 標記的不相容 Dock 覆寫，不會動到未標記資源。
 
 | 選項 | 作用 |
 | --- | --- |
