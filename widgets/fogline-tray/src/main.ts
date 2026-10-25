@@ -4,15 +4,15 @@ import { el, svg, closeOnEscape } from "../../shared/ui.ts";
 import "./style.css";
 import { t } from "../../shared/i18n.ts";
 
-// Seelen 2.8.8 tray records differ from the 2.8.4 SDK's legacy record type.
-interface TrayItem { registryKey: string; tooltip: string; iconPath?: string; iconImageHash?: string; isVisible: boolean; isPromoted: boolean; guid?: string }
+// Seelen 2.8.8+ separates the per-session action id from the persistent pin id.
+interface TrayItem { sessionId: string; registryKey: string; tooltip: string; iconPath?: string; iconImageHash?: string; isVisible: boolean; isPromoted: boolean; guid?: string }
 const widget = Widget.self, root = document.getElementById("root")!;
 const collator = new Intl.Collator("en", { sensitivity: "base", numeric: true });
 const excluded = new Set(["7820ae73-23e3-4229-82c1-e41cb67d5b9c","7820ae74-23e3-4229-82c1-e41cb67d5b9c","7820ae75-23e3-4229-82c1-e41cb67d5b9c"]);
 let items: TrayItem[] = [], contextOwner: number | null = null, pendingContext = false, error = "";
 const pinning = new Set<string>();
 async function action(item: TrayItem, action: string) {
-  try { await invoke("send_system_tray_icon_action", { id: item.registryKey, action }); error = ""; }
+  try { await invoke("send_system_tray_icon_action", { id: item.sessionId, action }); error = ""; }
   catch (e) { error = String(e); render(); }
 }
 function render() {
