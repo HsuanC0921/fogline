@@ -9,7 +9,7 @@ const widget = Widget.self;
 const root = document.getElementById("root")!;
 
 const open = openTarget;
-const go = (uri: string) => () => { widget.window.hide(); open(uri); };
+const go = (uri: string) => () => { widget.hide(); open(uri); };
 
 function modeText(ime: ImeState | null, code: string): string {
   if (!ime) return "";
@@ -176,7 +176,7 @@ await widget.init({ autoSizeByContent: root });
 await widget.window.setTitle("@hsuan/fogline-input").catch(console.error);
 await render();
 // the widget stays alive for a while after it hides, so refresh the list on every trigger
-closeOnEscape(() => widget.window.hide());
+closeOnEscape(() => widget.hide());
 widget.onTrigger(() => {
   refreshInput(); render();
 });

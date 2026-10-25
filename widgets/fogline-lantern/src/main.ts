@@ -369,12 +369,13 @@ function select(i: number) {
 function activate(i: number, reveal = false) {
   const hit = hits[i];
   if (!hit) return;
-  widget.window.hide();
+  widget.hide();
   (reveal && hit.reveal ? hit.reveal : hit.run)();
 }
 
 input.addEventListener("input", refresh);
 input.addEventListener("keydown", (e) => {
+  if (e.isComposing || e.keyCode === 229) return;
   if (e.key === "ArrowDown") {
     e.preventDefault();
     select(Math.min(selected + 1, hits.length - 1));
@@ -387,12 +388,12 @@ input.addEventListener("keydown", (e) => {
   } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "c" && hits[selected]?.group === "file") {
     e.preventDefault();
     navigator.clipboard.writeText(hits[selected].path ?? "");
-    widget.window.hide();
+    widget.hide();
   } else if (e.altKey && /^[1-9]$/.test(e.key)) {
     e.preventDefault();
     activate(Number(e.key) - 1);
   } else if (e.key === "Escape") {
-    widget.window.hide();
+    widget.hide();
   }
 });
 
@@ -416,7 +417,7 @@ async function coverMonitor() {
   await widget.window.setSize(new PhysicalSize(m.rect.right - m.rect.left, m.rect.bottom - m.rect.top));
 }
 root.addEventListener("mousedown", (e) => {
-  if (e.target === root) widget.window.hide();
+  if (e.target === root) widget.hide();
 });
 
 // the widget is lazy: the lists are fetched when it opens, and Seelen closes the whole webview again after it has been

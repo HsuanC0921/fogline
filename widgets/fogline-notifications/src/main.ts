@@ -2,8 +2,8 @@ import { invoke, subscribe, SeelenCommand, SeelenEvent, Widget } from "@seelen-u
 import { currentMonitor } from "@tauri-apps/api/window";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { Alignment, ToastActionActivationType, type AppNotification, type ToastBindingChild, type ToastImage } from "@seelen-ui/lib/types";
-import { el, svg, GLYPH, openTarget } from "../../shared/ui.ts";
-import { setDnd, syncDnd, openWindowsNotifications } from "../../fogline-cc/src/display.ts";
+import { el, svg, GLYPH, openTarget, refreshWhenVisible } from "../../shared/ui.ts";
+import { setDnd, syncDnd } from "../../fogline-cc/src/display.ts";
 import "./style.css";
 import { t, locale } from "../../shared/i18n.ts";
 
@@ -26,7 +26,6 @@ function run(action: () => unknown) {
     finally { busy = false; render(); }
   };
 }
-async function openNativeCenter() { await openWindowsNotifications(); await widget.window.hide(); }
 let dndRefresh: Promise<void> | null = null;
 function refreshDnd(): Promise<void> {
   if (!dndRefresh) dndRefresh = (async () => {
@@ -43,12 +42,17 @@ function button(cls: string, label: string, action: () => unknown, glyph?: strin
 }
 async function position() {
   const monitor = await currentMonitor();
-  if (monitor) await widget.adjustAndSetPosition(monitor.position.x + monitor.size.width - Math.round(4 * monitor.scaleFactor), monitor.position.y + Math.round(26 * monitor.scaleFactor), Alignment.End, Alignment.Start);
+  if (!monitor) return;
+  // Native coordinates are physical pixels; CSS dimensions are logical pixels.
+  root.style.setProperty("--fn-available-height", `${Math.max(1, monitor.size.height / monitor.scaleFactor - 26 - 8)}px`);
+  await widget.adjustAndSetPosition(monitor.position.x + monitor.size.width - Math.round(4 * monitor.scaleFactor), monitor.position.y + Math.round(26 * monitor.scaleFactor), Alignment.End, Alignment.Start);
 }
 function imageUrl(src: string) {
   if (/^(https?|data):/i.test(src)) return src;
   const path = src.replace(/^file:\/\/\/?/i, "");
-  return /^[a-z]:[\\/]/i.test(path) ? convertFileSrc(decodeURI(path)) : "";
+  if (!/^[a-z]:[\\/]/i.test(path)) return "";
+  try { return convertFileSrc(/^file:/i.test(src) ? decodeURIComponent(path) : path); }
+  catch { return ""; }
 }
 function collect(entries: ToastBindingChild[], texts: string[], images: ToastImage[]) {
   for (const entry of entries) {
@@ -100,8 +104,7 @@ function card(n: AppNotification, stack = 0, onClick?: () => void) {
   if (stack) return article;
   if (activationFailed.has(n.id)) {
     const note = el("div", "fn-activation-note"); note.setAttribute("role", "status");
-    note.append(el("p", "", t("此通知無法從第三方面板開啟。完整內容已展開，可改用 Windows 通知中心。")),
-      button("fn-button", t("在 Windows 中查看"), openNativeCenter));
+    note.append(el("p", "", t("此通知無法從第三方面板開啟。完整內容已展開，請回到原程式處理。")));
     article.append(note);
   }
   const actions = el("div", "fn-actions");
@@ -114,7 +117,7 @@ function card(n: AppNotification, stack = 0, onClick?: () => void) {
       if (control instanceof HTMLInputElement) {
         control.placeholder = data["@placeHolderContent"] ?? t("回覆…");
         // Enter sends with the first action, as replying from a macOS banner does
-        control.addEventListener("keydown", e => { const first = n.content.actions?.$value.find(a => "action" in a); if (e.key === "Enter" && first && "action" in first) run(() => activate(first.action["@arguments"], first.action["@activationType"]))(); });
+        control.addEventListener("keydown", e => { const first = n.content.actions?.$value.find(a => "action" in a); if (!e.isComposing && e.keyCode !== 229 && e.key === "Enter" && first && "action" in first) run(() => activate(first.action["@arguments"], first.action["@activationType"]))(); });
       }
       else for (const selection of data.selection) { const option = el("option", "", selection["@content"]); option.value = selection["@id"]; control.append(option); }
       control.value = inputData[data["@id"]] ?? control.value;
@@ -128,6 +131,8 @@ function card(n: AppNotification, stack = 0, onClick?: () => void) {
   return article;
 }
 function render() {
+  if (document.hidden && root.childElementCount) return;
+  const scrollTop = root.querySelector(".fn-list")?.scrollTop ?? 0;
   const box = el("section", "fn-box");
   const header = el("header", "fn-header fn-glass");
   header.append(el("h1", "", t("通知中心")), el("span", "fn-count", notifications.length ? String(notifications.length) : ""));
@@ -137,12 +142,17 @@ function render() {
   else focus.title = t("無法讀取 Windows 勿擾狀態");
   const clear = button("fn-icon", t("全部清除"), () => invoke(SeelenCommand.NotificationsCloseAll), CLOSE); clear.disabled = busy || !notifications.length;
   const settings = button("fn-icon", t("通知設定"), () => openTarget("ms-settings:notifications"), GLYPH.gear);
-  header.append(button("fn-icon", t("在 Windows 中查看"), openNativeCenter, GLYPH.keyboard), focus, clear, settings); box.append(header);
+  header.append(focus, clear, settings); box.append(header);
   if (dnd) { const note = el("div", "fn-dnd fn-glass"); note.append(svg(GLYPH.moon, 14), el("span", "", t("勿擾模式已開啟，只顯示優先通知"))); box.append(note); }
 
   const list = el("div", "fn-list");
   const groups = new Map<string, AppNotification[]>();
-  for (const n of [...notifications].sort((a, b) => b.date - a.date)) groups.set(n.appUmid || n.appName, [...(groups.get(n.appUmid || n.appName) ?? []), n]);
+  for (const n of [...notifications].sort((a, b) => b.date - a.date)) {
+    const key = n.appUmid || n.appName;
+    const group = groups.get(key);
+    if (group) group.push(n);
+    else groups.set(key, [n]);
+  }
   for (const [key, items] of groups) {
     if (items.length === 1) { list.append(card(items[0]!)); continue; }
     if (!expanded.has(key)) { list.append(card(items[0]!, items.length, () => { expanded.add(key); render(); })); continue; }
@@ -158,18 +168,21 @@ function render() {
   box.append(list);
   if (error) { const message = el("p", "fn-error fn-glass", error); message.setAttribute("role", "status"); box.append(message); }
   root.replaceChildren(box);
+  list.scrollTop = scrollTop;
 }
 await widget.init({ autoSizeByContent: root });
 await widget.window.setTitle("@hsuan/fogline-notifications").catch(console.error);
 subscribe(SeelenEvent.Notifications, (e) => { notifications = e.payload; for (const id of activationFailed) if (!notifications.some(n => n.id === id)) activationFailed.delete(id); for (const id of replyDrafts.keys()) if (!notifications.some(n => n.id === id)) replyDrafts.delete(id); for (const key of expanded) if (!notifications.some(n => (n.appUmid || n.appName) === key)) expanded.delete(key); render(); }).catch(console.error);
 subscribe(SeelenEvent.NotificationsModeChanged, () => { refreshDnd(); }).catch(console.error);
 async function refresh() {
+  await position();
   try { notifications = await invoke(SeelenCommand.GetNotifications); error = ""; }
   catch (e) { error = String(e); }
-  render(); await position();
+  render();
   await refreshDnd();
 }
 await refresh();
 widget.onTrigger(() => { expanded.clear(); refresh().catch(console.error); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") widget.window.hide(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") widget.hide(); });
 await widget.ready();
+refreshWhenVisible(render);

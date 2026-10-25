@@ -15,4 +15,4 @@ plugin:
   tooltip: |-
     const k = 2; // fogline:lang
     return ["Control Center · brightness, volume, eye care and connections", "コントロールセンター · 明るさ、サウンド、目の保護、接続", "控制中心 · 亮度、音量、護眼與連線"][k]
-  onClickV2: trigger("@hsuan/fogline-cc")
+  onClick: trigger("@hsuan/fogline-cc")

@@ -32,4 +32,4 @@ plugin:
     alignItems: center
     lineHeight: 1
     fontWeight: 600
-  onClickV2: trigger("@hsuan/fogline-input")
+  onClick: trigger("@hsuan/fogline-input")

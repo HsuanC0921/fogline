@@ -179,7 +179,7 @@ const D: Record<string, [string, string]> = {
   "開啟通知": ["Open notification", "通知を開く"],
   "在 Windows 中查看": ["View in Windows", "Windowsで表示"],
   "無法讀取 Windows 勿擾狀態": ["Windows Do Not Disturb status is unavailable", "Windowsのおやすみモードの状態を取得できません"],
-  "此通知無法從第三方面板開啟。完整內容已展開，可改用 Windows 通知中心。": ["This notification could not be opened from a third-party panel. Its full content is expanded; try Windows Notification Center.", "この通知はサードパーティのパネルから開けません。全文を表示しました。Windowsの通知センターをご利用ください。"],
+  "此通知無法從第三方面板開啟。完整內容已展開，請回到原程式處理。": ["This notification could not be opened from a third-party panel. Its full content is expanded; use the original app to handle it.", "この通知はサードパーティのパネルから開けません。全文を表示しました。元のアプリで操作してください。"],
   "還有 {n} 則通知": ["{n} more notifications", "ほか{n}件の通知"],
   "回覆": ["Reply", "返信"],
   "回覆…": ["Reply…", "返信…"],

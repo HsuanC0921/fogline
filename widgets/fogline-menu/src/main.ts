@@ -59,7 +59,7 @@ for (const entry of entries) {
       label.textContent = entry.confirm;
       return;
     }
-    widget.window.hide();
+    widget.hide();
     entry.run();
   });
   btn.addEventListener("mouseleave", reset);

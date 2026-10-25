@@ -3,10 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "check": "tsc --noEmit",
     "build": "esbuild widgets/fogline-menu/src/main.ts --bundle --format=esm --target=es2022 --minify --outfile=widgets/fogline-menu/index.js && esbuild widgets/fogline-lantern/src/main.ts --bundle --format=esm --target=es2022 --minify --outfile=widgets/fogline-lantern/index.js && esbuild widgets/fogline-input/src/main.ts --bundle --format=esm --target=es2022 --minify --outfile=widgets/fogline-input/index.js && esbuild widgets/fogline-net/src/main.ts --bundle --format=esm --target=es2022 --minify --outfile=widgets/fogline-net/index.js && esbuild widgets/fogline-bt/src/main.ts --bundle --format=esm --target=es2022 --minify --outfile=widgets/fogline-bt/index.js && esbuild widgets/fogline-cc/src/main.ts --bundle --format=esm --target=es2022 --minify --outfile=widgets/fogline-cc/index.js && esbuild widgets/fogline-cal/src/main.ts --bundle --format=esm --target=es2022 --minify --outfile=widgets/fogline-cal/index.js && esbuild widgets/fogline-notifications/src/main.ts --bundle --format=esm --target=es2022 --minify --outfile=widgets/fogline-notifications/index.js && esbuild widgets/fogline-tray/src/main.ts --bundle --format=esm --target=es2022 --minify --outfile=widgets/fogline-tray/index.js"
   },
   "devDependencies": {
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "@seelen-ui/lib": "2.8.4"

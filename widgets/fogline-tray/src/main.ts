@@ -1,11 +1,11 @@
 import { Widget, subscribe, SeelenEvent } from "@seelen-ui/lib";
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
-import { el, svg, closeOnEscape } from "../../shared/ui.ts";
+import { el, svg, closeOnEscape, refreshWhenVisible } from "../../shared/ui.ts";
 import "./style.css";
 import { t } from "../../shared/i18n.ts";
 
 // Seelen 2.8.8+ separates the per-session action id from the persistent pin id.
-interface TrayItem { sessionId: string; registryKey: string; tooltip: string; iconPath?: string; iconImageHash?: string; isVisible: boolean; isPromoted: boolean; guid?: string }
+interface TrayItem { sessionId: string; registryKey?: string | null; tooltip: string; iconPath?: string | null; iconImageHash?: string | null; isVisible: boolean; isPromoted: boolean; guid?: string | null }
 const widget = Widget.self, root = document.getElementById("root")!;
 const collator = new Intl.Collator("en", { sensitivity: "base", numeric: true });
 const excluded = new Set(["7820ae73-23e3-4229-82c1-e41cb67d5b9c","7820ae74-23e3-4229-82c1-e41cb67d5b9c","7820ae75-23e3-4229-82c1-e41cb67d5b9c"]);
@@ -13,9 +13,10 @@ let items: TrayItem[] = [], contextOwner: number | null = null, pendingContext =
 const pinning = new Set<string>();
 async function action(item: TrayItem, action: string) {
   try { await invoke("send_system_tray_icon_action", { id: item.sessionId, action }); error = ""; }
-  catch (e) { error = String(e); render(); }
+  catch (e) { if (action === "RightClick") { pendingContext = false; contextOwner = null; } error = String(e); render(); }
 }
 function render() {
+  if (document.hidden && root.childElementCount) return;
   const box = el("section", "slu-std-popover mx-box ftray");
   const visible = items.filter(item => item.isVisible && !excluded.has(item.guid ?? "")).sort((a,b) => collator.compare(a.tooltip,b.tooltip));
   const header = el("div", "mx-head"); header.append(el("span", "mx-title", t("背景程式")), el("span", "mx-head-sub", t("{n} 個", { n: visible.length }))); box.append(header, el("div", "mx-sep"));
@@ -29,17 +30,18 @@ function render() {
     app.addEventListener("dblclick", () => action(item,"LeftDoubleClick"));
     app.addEventListener("auxclick", e => { if (e.button === 1) action(item,"MiddleClick"); });
     app.addEventListener("contextmenu", e => { e.preventDefault(); pendingContext = true; contextOwner = null; action(item,"RightClick"); });
-    const pin = el("button", "ftray-pin"); pin.setAttribute("aria-label", `${item.isPromoted ? t("取消釘選") : t("釘選")} ${item.tooltip}`); pin.setAttribute("aria-pressed", String(item.isPromoted)); pin.disabled = !item.registryKey || pinning.has(item.registryKey);
-    pin.setAttribute("aria-busy", String(pinning.has(item.registryKey)));
+    const registryKey = item.registryKey ?? "";
+    const pin = el("button", "ftray-pin"); pin.setAttribute("aria-label", `${item.isPromoted ? t("取消釘選") : t("釘選")} ${item.tooltip}`); pin.setAttribute("aria-pressed", String(item.isPromoted)); pin.disabled = !registryKey || pinning.has(registryKey);
+    pin.setAttribute("aria-busy", String(pinning.has(registryKey)));
     pin.append(svg("m8 3 8 0-1 6 3 3v2h-5v7l-2-3v-4H6v-2l3-3z",16));
     pin.addEventListener("click", async () => {
-      if (pinning.has(item.registryKey)) return;
-      pinning.add(item.registryKey); error = ""; render();
+      if (!registryKey || pinning.has(registryKey)) return;
+      pinning.add(registryKey); error = ""; render();
       try {
-        await invoke("set_system_tray_icon_promoted", { id: item.registryKey, promoted: !item.isPromoted });
+        await invoke("set_system_tray_icon_promoted", { id: item.sessionId, promoted: !item.isPromoted });
         items = await invoke<TrayItem[]>("get_system_tray_icons");
       } catch(e) { error=String(e); }
-      finally { pinning.delete(item.registryKey); render(); }
+      finally { pinning.delete(registryKey); render(); }
     });
     row.append(app,pin); box.append(row);
   }
@@ -54,9 +56,10 @@ subscribe(SeelenEvent.GlobalFocusChanged, e => {
   // A foreign app owns its own menu. Keep the tray through that focus transition and its submenus.
   if (pendingContext) { pendingContext = false; contextOwner = focus.hwnd; return; }
   if (focus.hwnd === contextOwner || focus.ownerHwnd === contextOwner || focus.class === "#32768") return;
-  widget.window.hide();
+  widget.hide();
 }).catch(console.error);
 async function refresh() { try { items = await invoke<TrayItem[]>("get_system_tray_icons"); error = ""; } catch(e) { error = String(e); } render(); }
 await refresh(); widget.onTrigger(() => { pendingContext = false; contextOwner = null; refresh(); });
-closeOnEscape(() => widget.window.hide());
+closeOnEscape(() => widget.hide());
 await widget.ready();
+refreshWhenVisible(render);

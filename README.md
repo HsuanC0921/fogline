@@ -102,7 +102,7 @@ Read [AGENTS.md](AGENTS.md) before modifying an installation. Do not edit Seelen
 - Warm display is Fogline's Magnification color transform, separate from Windows Night light. HDR, protected content and exclusive fullscreen need device-specific verification.
 - Appearance switching uses an undocumented Windows theme interface. Do Not Disturb uses IQuietHoursSettings directly, with active-profile readback; no Settings windows are opened. These undocumented COM interfaces can change with Windows updates.
 - Holiday APIs have different coverage. Cached data remains available offline; missing years are not replaced with invented holidays.
-- Notification actions use native Seelen activation, dismissal and reply commands. Some desktop toasts cannot be activated by third-party clients; they remain available with full text and a Windows Notification Center entry using direct Shell COM activation (not keyboard simulation). Windows Do Not Disturb is read through the native bridge; unavailable state is not replaced by a local-only success.
+- Notification actions use native Seelen activation, dismissal and reply commands. Some desktop toasts cannot be activated by third-party clients; their full text is expanded so they can be handled in the original app. Windows Do Not Disturb is read through the native bridge; unavailable state is not replaced by a local-only success.
 - Widget permissions, external menus and fullscreen behavior need testing on the target system. Hiding the native taskbar does not stop Explorer or eliminate background work.
 - Seelen logs: `%LOCALAPPDATA%\com.seelen.seelen-ui\logs`.
 

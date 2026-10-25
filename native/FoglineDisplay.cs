@@ -14,6 +14,10 @@ internal static class FoglineDisplay {
     [DllImport("user32.dll",CharSet=CharSet.Unicode)] static extern int GetClassName(IntPtr window,StringBuilder name,int length);
     [DllImport("user32.dll",CharSet=CharSet.Unicode)] static extern int GetWindowText(IntPtr window,StringBuilder name,int length);
     [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr window,int command);
+    [DllImport("user32.dll")] static extern bool ShowWindowAsync(IntPtr window,int command);
+    [DllImport("user32.dll")] static extern bool IsWindow(IntPtr window);
+    [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr window,int attribute,out NativeRect value,int size);
+    [DllImport("user32.dll")] static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
     [StructLayout(LayoutKind.Sequential)] struct NativeRect { public int left,top,right,bottom; }
     [StructLayout(LayoutKind.Sequential)] struct MonitorInfo { public int size; public NativeRect monitor,work; public uint flags; }
     [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr window,out NativeRect rect);
@@ -53,10 +57,14 @@ internal static class FoglineDisplay {
     [DllImport("user32.dll")] static extern bool IsIconic(IntPtr window);
     delegate bool EnumWindowsProc(IntPtr window,IntPtr param);
     [DllImport("user32.dll")] static extern bool EnumWindows(EnumWindowsProc proc,IntPtr param);
-    static bool barsHidden;
-    static long lastBarSweep;
+    static IntPtr fullscreenTarget, fullscreenMonitor;
     static readonly System.Collections.Generic.HashSet<IntPtr> hiddenBars=new System.Collections.Generic.HashSet<IntPtr>();
     static WinEvent fullscreenForegroundCallback, fullscreenLocationCallback;
+    delegate void TimerCallback(IntPtr window,uint message,UIntPtr timer,uint time);
+    [DllImport("user32.dll")] static extern UIntPtr SetTimer(IntPtr window,UIntPtr timer,uint interval,TimerCallback callback);
+    [DllImport("user32.dll")] static extern bool KillTimer(IntPtr window,UIntPtr timer);
+    static UIntPtr fullscreenTimer;
+    static TimerCallback fullscreenTimerCallback;
     static string ClassOf(IntPtr window) { var name=new StringBuilder(64); GetClassName(window,name,64); return name.ToString(); }
     static string ProcessOf(IntPtr window) {
         uint pid; GetWindowThreadProcessId(window,out pid);
@@ -65,27 +73,32 @@ internal static class FoglineDisplay {
     static bool IsFullscreenWindow(IntPtr window,out IntPtr monitor) {
         monitor=IntPtr.Zero;
         if(window==IntPtr.Zero || !IsWindowVisible(window) || IsIconic(window)) return false;
-        // a title bar means a maximised window, which leaves room for the bars
-        if((GetWindowLong(window,-16)&0xC00000)==0xC00000) return false;
         NativeRect rect; if(!GetWindowRect(window,out rect)) return false;
+        NativeRect frame;
+        // Browsers and borderless games may retain WS_CAPTION. Visible bounds, not styles, decide coverage.
+        if(DwmGetWindowAttribute(window,9,out frame,Marshal.SizeOf(typeof(NativeRect)))==0 && frame.right>frame.left && frame.bottom>frame.top) rect=frame;
         monitor=MonitorFromWindow(window,2);
         var info=new MonitorInfo(); info.size=Marshal.SizeOf(typeof(MonitorInfo));
         if(!GetMonitorInfo(monitor,ref info)) return false;
-        if(rect.left>info.monitor.left || rect.top>info.monitor.top || rect.right<info.monitor.right || rect.bottom<info.monitor.bottom) return false;
+        if(!CoversMonitor(rect,info.monitor)) return false;
         string cls=ClassOf(window);
         if(cls=="Progman" || cls=="WorkerW" || cls=="Shell_TrayWnd" || cls=="Shell_SecondaryTrayWnd" || cls=="Windows.UI.Core.CoreWindow") return false;
         string name=ProcessOf(window);
-        return name!="" && name!="seelen-ui" && name!="FoglineDisplay" && name!="SearchHost" && name!="StartMenuExperienceHost" && name!="ShellExperienceHost";
+        return name!="seelen-ui" && name!="FoglineDisplay" && name!="SearchHost" && name!="StartMenuExperienceHost" && name!="ShellExperienceHost";
+    }
+    static bool CoversMonitor(NativeRect rect,NativeRect monitor) {
+        const int tolerance=2; // physical pixels: account for DWM rounding on mixed-DPI displays
+        return rect.right>rect.left && rect.bottom>rect.top && rect.left<=monitor.left+tolerance && rect.top<=monitor.top+tolerance && rect.right>=monitor.right-tolerance && rect.bottom>=monitor.bottom-tolerance;
     }
     // the menu bar and Dock: full-width, topmost Seelen windows stuck to the top or bottom edge of a monitor
     static bool IsSeelenBar(IntPtr window,uint seelen,IntPtr monitor) {
         uint pid; GetWindowThreadProcessId(window,out pid);
-        if(pid!=seelen || ClassOf(window)!="Tauri Window" || (GetWindowLong(window,-20)&0x8)==0) return false;
+        if(seelen==0 || pid!=seelen || ClassOf(window)!="Tauri Window") return false;
         if(MonitorFromWindow(window,2)!=monitor) return false;
         var info=new MonitorInfo(); info.size=Marshal.SizeOf(typeof(MonitorInfo));
         NativeRect rect; if(!GetMonitorInfo(monitor,ref info) || !GetWindowRect(window,out rect)) return false;
         int height=rect.bottom-rect.top;
-        return rect.right-rect.left>=info.monitor.right-info.monitor.left && height<(info.monitor.bottom-info.monitor.top)/3 && (rect.top<=info.monitor.top || rect.bottom>=info.monitor.bottom);
+        return rect.right-rect.left>=info.monitor.right-info.monitor.left-4 && height>0 && height<(info.monitor.bottom-info.monitor.top)/3 && (rect.top<=info.monitor.top+2 || rect.bottom>=info.monitor.bottom-2);
     }
     static uint SeelenProcess() {
         var processes=Process.GetProcessesByName("seelen-ui"); uint id=processes.Length>0 ? (uint)processes[0].Id : 0;
@@ -95,24 +108,36 @@ internal static class FoglineDisplay {
     static void HideBars(IntPtr monitor) {
         uint seelen=SeelenProcess(); if(seelen==0) return;
         EnumWindows(delegate(IntPtr window,IntPtr param) {
-            if(IsWindowVisible(window) && IsSeelenBar(window,seelen,monitor)) { hiddenBars.Add(window); ShowWindow(window,0); }
+            if(IsWindowVisible(window) && IsSeelenBar(window,seelen,monitor)) { hiddenBars.Add(window); ShowWindowAsync(window,0); }
             return true;
         },IntPtr.Zero);
     }
     static void RestoreBars() {
-        foreach(var window in hiddenBars) ShowWindow(window,8);
+        uint seelen=SeelenProcess();
+        foreach(var window in hiddenBars) {
+            // HWNDs may be recycled after Seelen is restarted. Never restore an unrelated window.
+            if(IsWindow(window) && IsSeelenBar(window,seelen,MonitorFromWindow(window,2))) ShowWindowAsync(window,8);
+        }
         hiddenBars.Clear();
+    }
+    static void ScheduleFullscreenCheck() {
+        // One pending trailing check bounds resize/show storms without polling or dropping the final event.
+        if(fullscreenTimer!=UIntPtr.Zero) return;
+        fullscreenTimer=SetTimer(IntPtr.Zero,UIntPtr.Zero,75,fullscreenTimerCallback);
+        if(fullscreenTimer==UIntPtr.Zero) CheckFullscreen();
     }
     static void CheckFullscreen() {
         IntPtr foreground=GetForegroundWindow();
-        // a Seelen popup opened over a fullscreen app must not bring the bars back
-        if(foreground!=IntPtr.Zero && ClassOf(foreground)=="Tauri Window") return;
+        // Only our own popups preserve the target. Other Tauri apps (including browsers) are ordinary windows.
+        if(foreground!=IntPtr.Zero && ProcessOf(foreground)=="seelen-ui") foreground=fullscreenTarget;
         IntPtr monitor;
         if(IsFullscreenWindow(foreground,out monitor)) {
-            long now=Environment.TickCount;
-            if(barsHidden && now-lastBarSweep<500) return;
-            lastBarSweep=now; HideBars(monitor); barsHidden=true;
-        } else if(barsHidden) { RestoreBars(); barsHidden=false; }
+            if(fullscreenMonitor!=IntPtr.Zero && fullscreenMonitor!=monitor) RestoreBars();
+            fullscreenTarget=foreground; fullscreenMonitor=monitor;
+            HideBars(monitor);
+        } else {
+            RestoreBars(); fullscreenTarget=IntPtr.Zero; fullscreenMonitor=IntPtr.Zero;
+        }
     }
     [StructLayout(LayoutKind.Sequential)] struct GuiThreadInfo {
         public int size, flags; public IntPtr active, focus, capture, menuOwner, moveSize, caret;
@@ -171,15 +196,21 @@ internal static class FoglineDisplay {
     static Thread StartInputTracking() {
         inputTarget=IntPtr.Zero;
         var thread=new Thread(delegate() {
+            SetThreadDpiAwarenessContext(new IntPtr(-4));
             inputThread=GetCurrentThreadId();
             inputCallback=delegate(IntPtr h,uint ev,IntPtr window,int obj,int child,uint tid,uint time) { TrackInput(window); };
             IntPtr hook=SetWinEventHook(3,3,IntPtr.Zero,inputCallback,0,0,2);
             shellCallback=delegate(IntPtr h,uint ev,IntPtr window,int obj,int child,uint tid,uint time) {
-                if(obj==0 && child==0) AdjustShellWindow(window);
+                if(obj!=0 || child!=0) return;
+                AdjustShellWindow(window);
+                // Seelen can re-show a bar after its own focus/layout update. Reapply only on that event.
+                uint pid; GetWindowThreadProcessId(window,out pid);
+                if(fullscreenTarget!=IntPtr.Zero && pid==SeelenProcess()) ScheduleFullscreenCheck();
             };
             IntPtr shellHook=SetWinEventHook(0x8002,0x8002,IntPtr.Zero,shellCallback,0,0,2);
-            fullscreenForegroundCallback=delegate(IntPtr h,uint ev,IntPtr window,int obj,int child,uint tid,uint time) { CheckFullscreen(); };
-            fullscreenLocationCallback=delegate(IntPtr h,uint ev,IntPtr window,int obj,int child,uint tid,uint time) { if(obj==0 && child==0 && window==GetForegroundWindow()) CheckFullscreen(); };
+            fullscreenTimerCallback=delegate(IntPtr w,uint m,UIntPtr timer,uint time) { KillTimer(IntPtr.Zero,timer); fullscreenTimer=UIntPtr.Zero; CheckFullscreen(); };
+            fullscreenForegroundCallback=delegate(IntPtr h,uint ev,IntPtr window,int obj,int child,uint tid,uint time) { ScheduleFullscreenCheck(); };
+            fullscreenLocationCallback=delegate(IntPtr h,uint ev,IntPtr window,int obj,int child,uint tid,uint time) { if(obj==0 && child==0 && (window==GetForegroundWindow() || window==fullscreenTarget)) ScheduleFullscreenCheck(); };
             IntPtr fullscreenForegroundHook=SetWinEventHook(3,3,IntPtr.Zero,fullscreenForegroundCallback,0,0,2);
             IntPtr fullscreenLocationHook=SetWinEventHook(0x800B,0x800B,IntPtr.Zero,fullscreenLocationCallback,0,0,2);
             CheckFullscreen();
@@ -189,6 +220,7 @@ internal static class FoglineDisplay {
             Message message;
             try { while(GetMessage(out message,IntPtr.Zero,0,0)>0) { TranslateMessage(ref message); DispatchMessage(ref message); } }
             finally {
+                if(fullscreenTimer!=UIntPtr.Zero) { KillTimer(IntPtr.Zero,fullscreenTimer); fullscreenTimer=UIntPtr.Zero; }
                 if(hook!=IntPtr.Zero) UnhookWinEvent(hook); if(shellHook!=IntPtr.Zero) UnhookWinEvent(shellHook);
                 if(fullscreenForegroundHook!=IntPtr.Zero) UnhookWinEvent(fullscreenForegroundHook); if(fullscreenLocationHook!=IntPtr.Zero) UnhookWinEvent(fullscreenLocationHook);
                 RestoreBars();
@@ -361,7 +393,25 @@ internal static class FoglineDisplay {
     [StructLayout(LayoutKind.Sequential,CharSet=CharSet.Unicode)] struct WlanConnectParams { public int mode; public string profile; public IntPtr ssid; public IntPtr bssids; public int bssType; public uint flags; }
     [DllImport("wlanapi.dll")] static extern int WlanConnect(IntPtr handle,ref Guid iface,ref WlanConnectParams parameters,IntPtr reserved);
     [DllImport("wlanapi.dll")] static extern void WlanFreeMemory(IntPtr memory);
-    static string Q(string s) { return "\""+(s ?? "").Replace("\\","\\\\").Replace("\"","\\\"").Replace("\r"," ").Replace("\n"," ")+"\""; }
+    static string Q(string s) {
+        var json=new StringBuilder("\"");
+        foreach(char ch in s ?? "") {
+            switch(ch) {
+                case '"': json.Append("\\\""); break;
+                case '\\': json.Append("\\\\"); break;
+                case '\b': json.Append("\\b"); break;
+                case '\f': json.Append("\\f"); break;
+                case '\n': json.Append("\\n"); break;
+                case '\r': json.Append("\\r"); break;
+                case '\t': json.Append("\\t"); break;
+                default:
+                    if(ch<0x20) json.Append("\\u").Append(((int)ch).ToString("x4"));
+                    else json.Append(ch);
+                    break;
+            }
+        }
+        return json.Append('"').ToString();
+    }
     static string Param(string query,string key) {
         foreach(string pair in query.Split('&')) {
             int eq=pair.IndexOf('=');
@@ -469,11 +519,17 @@ internal static class FoglineDisplay {
     }
     static void WifiDisconnect() {
         Guid iface; IntPtr handle=WlanOpen(out iface);
-        try { WlanDisconnect(handle,ref iface,IntPtr.Zero); } finally { WlanCloseHandle(handle,IntPtr.Zero); }
+        try {
+            int code=WlanDisconnect(handle,ref iface,IntPtr.Zero);
+            if(code!=0) throw new Exception("Could not disconnect Wi-Fi ("+code+")");
+        } finally { WlanCloseHandle(handle,IntPtr.Zero); }
     }
     static void WifiScan() {
         Guid iface; IntPtr handle=WlanOpen(out iface);
-        try { WlanScan(handle,ref iface,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero); } finally { WlanCloseHandle(handle,IntPtr.Zero); }
+        try {
+            int code=WlanScan(handle,ref iface,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero);
+            if(code!=0) throw new Exception("Could not scan Wi-Fi networks ("+code+")");
+        } finally { WlanCloseHandle(handle,IntPtr.Zero); }
     }
     // ItemUrl is the real path (file:C:/Users/...); ItemPathDisplay is localised ("C:\使用者") and cannot be opened.
     static string RealPath(string url) {
@@ -482,12 +538,14 @@ internal static class FoglineDisplay {
     }
     // Files from Windows' own search index (nothing of ours is built or kept): newest matches in the user's folders first.
     static string FileSearch(string text) {
-        text=Regex.Replace(text ?? "","[%_\\[\\]']","").Trim();
+        text=Regex.Replace(text ?? "","[%_\\[\\]]","").Trim();
         if(text.Length<2) return "{\"files\":[]}";
+        text=text.Replace("'","''");
         var found=new StringBuilder();
         using(var connection=new System.Data.OleDb.OleDbConnection("Provider=Search.CollatorDSO;Extended Properties=\"Application=Windows\""))
         using(var command=connection.CreateCommand()) {
             connection.Open();
+            command.CommandTimeout=3;
             command.CommandText="SELECT TOP 6 System.ItemNameDisplay, System.ItemUrl FROM SystemIndex WHERE System.ItemNameDisplay LIKE '%"+text+"%' AND System.ItemType <> '.lnk' AND NOT System.ItemPathDisplay LIKE '%\\AppData\\%' ORDER BY System.DateModified DESC";
             using(var reader=command.ExecuteReader())
                 while(reader.Read()) {
@@ -496,8 +554,9 @@ internal static class FoglineDisplay {
                 }
         }
         return "{\"files\":["+found+"]}";
-    }    static string JsonError(string error) {
-        return "{\"error\":\""+error.Replace("\\","\\\\").Replace("\"","\\\"").Replace("\r"," ").Replace("\n"," ")+"\"}";
+    }
+    static string JsonError(string error) {
+        return "{\"error\":"+Q(error)+"}";
     }
     [STAThread] static int Main(string[] args) {
         if(args.Length==1 && args[0]=="--warm-test") {
@@ -612,7 +671,8 @@ internal static class FoglineDisplay {
                         while(header.Length<8192) {
                             int b=stream.ReadByte(); if(b<0) break;
                             header.Append((char)b);
-                            if(header.ToString().EndsWith("\r\n\r\n",StringComparison.Ordinal)) break;
+                            int length=header.Length;
+                            if(length>=4 && header[length-4]=='\r' && header[length-3]=='\n' && header[length-2]=='\r' && header[length-1]=='\n') break;
                         }
                         string request=header.ToString();
                         string[] line=request.Split('\n')[0].Trim().Split(' ');
@@ -639,7 +699,6 @@ internal static class FoglineDisplay {
                             else if(line[0]=="POST" && line[1]=="/wifi/disconnect") { WifiDisconnect(); inputResult="{}"; }
                             else if(line[0]=="GET" && line[1]=="/files") inputResult=FileSearch(Param(query,"q"));
                             else if(line[0]=="GET" && line[1]=="/dnd") inputResult="{\"dnd\":"+(Dnd.Read()?"true":"false")+"}";
-                            else if(line[0]=="POST" && line[1]=="/notifications/open") { WindowsNotifications.Open(); inputResult="{}"; }
                             else if(line[0]=="POST" && (line[1]=="/dnd/on" || line[1]=="/dnd/off")) { bool want=line[1]=="/dnd/on"; Dnd.Set(want); inputResult="{\"dnd\":"+(want?"true":"false")+"}"; }
                             else if(line[0]=="POST" && line[1]=="/warm/on") SetWarm(true);
                             else if(line[0]=="POST" && line[1]=="/warm/off") SetWarm(false);
@@ -668,48 +727,6 @@ internal static class FoglineDisplay {
             inputTracker.Join(500);
         }
         return 0;
-    }
-}
-
-// Direct Shell COM calls: no synthetic hotkeys and no Settings windows.
-// These interfaces are undocumented and may change with Windows releases.
-internal static class WindowsNotifications {
-    [ComImport,Guid("6D5140C1-7436-11CE-8034-00AA006009FA"),InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    interface IServiceProvider {
-        [PreserveSig] int QueryService(ref Guid service,ref Guid iid,[MarshalAs(UnmanagedType.Interface)] out object result);
-    }
-    [ComImport,Guid("2E8FCB18-A0EE-41AD-8EF8-77FB3A370CA5"),InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    interface IExperienceFactory {
-        void GetIids(out uint count,out IntPtr ids);
-        void GetRuntimeClassName(out IntPtr name);
-        void GetTrustLevel(out int level);
-        [return:MarshalAs(UnmanagedType.Interface)] object GetExperienceManager(IntPtr name);
-    }
-    [ComImport,Guid("DEC04B18-357E-41D8-9B71-B991243BEA34"),InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    interface IActionCenter {
-        void GetIids(out uint count,out IntPtr ids);
-        void GetRuntimeClassName(out IntPtr name);
-        void GetTrustLevel(out int level);
-        void HotKeyInvoked(IntPtr kind);
-    }
-    [DllImport("combase.dll",CharSet=CharSet.Unicode)] static extern int WindowsCreateString(string value,int length,out IntPtr result);
-    [DllImport("combase.dll")] static extern int WindowsDeleteString(IntPtr value);
-    public static void Open() {
-        object shell=null,factory=null,manager=null; IntPtr name=IntPtr.Zero;
-        try {
-            shell=Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("C2F03A33-21F5-47FA-B4BB-156362A2F239")));
-            Guid service=new Guid("2E8FCB18-A0EE-41AD-8EF8-77FB3A370CA5"),iid=service;
-            Marshal.ThrowExceptionForHR(((IServiceProvider)shell).QueryService(ref service,ref iid,out factory));
-            const string experience="Windows.Internal.ShellExperience.ActionCenter";
-            Marshal.ThrowExceptionForHR(WindowsCreateString(experience,experience.Length,out name));
-            manager=((IExperienceFactory)factory).GetExperienceManager(name);
-            ((IActionCenter)manager).HotKeyInvoked(IntPtr.Zero);
-        } finally {
-            if(manager!=null) Marshal.ReleaseComObject(manager);
-            if(name!=IntPtr.Zero) WindowsDeleteString(name);
-            if(factory!=null) Marshal.ReleaseComObject(factory);
-            if(shell!=null) Marshal.ReleaseComObject(shell);
-        }
     }
 }
 

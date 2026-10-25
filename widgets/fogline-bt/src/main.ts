@@ -1,13 +1,13 @@
 import { invoke, SeelenCommand, SeelenEvent, subscribe, Widget } from "@seelen-ui/lib";
 import type { BluetoothDevice, DevicePairingAnswer, DevicePairingNeededAction, RadioDevice } from "@seelen-ui/lib/types";
-import { el, GLYPH, safe, closeOnEscape, svg, toggleSwitch, settingsLink, openTarget } from "../../shared/ui.ts";
+import { el, GLYPH, safe, closeOnEscape, refreshWhenVisible, svg, toggleSwitch, settingsLink, openTarget } from "../../shared/ui.ts";
 import "./style.css";
 import { t } from "../../shared/i18n.ts";
 
 const widget = Widget.self;
 const root = document.getElementById("root")!;
 const open = openTarget;
-const go = (uri: string) => () => { widget.window.hide(); open(uri); };
+const go = (uri: string) => () => { widget.hide(); open(uri); };
 
 function glyph(d: BluetoothDevice): string {
   const major = (d.class as { major: string }).major;
@@ -31,8 +31,8 @@ const busy = new Set<string>();
 // a Bluetooth inquiry keeps the radio busy and costs power.
 let scanning = false, scanTimer: number | undefined;
 function setScanning(v: boolean) {
-  clearTimeout(scanTimer);
   if (v === scanning) return;
+  clearTimeout(scanTimer);
   scanning = v;
   invoke(v ? SeelenCommand.StartBluetoothScanning : SeelenCommand.StopBluetoothScanning).catch(console.error);
   if (v) scanTimer = window.setTimeout(() => { setScanning(false); render(); }, 30000);
@@ -95,6 +95,7 @@ function deviceRow(d: BluetoothDevice, onClick: () => void, title: string, enabl
 }
 
 async function render() {
+  if (document.hidden && root.childElementCount) return;
   const version = ++renderVersion;
   const [radios, devices] = await Promise.all([
     safe(invoke(SeelenCommand.GetRadios) as Promise<RadioDevice[]>, []),
@@ -133,21 +134,26 @@ async function render() {
     for (const d of mine) {
       const canToggle = d.connected ? d.canDisconnect : d.canConnect;
       const row = deviceRow(d, async () => {
-        busy.add(d.id);
+        if (busy.has(d.id)) return;
+        busy.add(d.id); pairError = "";
         render();
-        await (d.connected
-          ? invoke(SeelenCommand.DisconnectBluetoothDevice, { id: d.id })
-          : invoke(SeelenCommand.ConnectBluetoothDevice, { id: d.id })).catch(console.error);
-        busy.delete(d.id);
-        render();
+        try {
+          await (d.connected
+            ? invoke(SeelenCommand.DisconnectBluetoothDevice, { id: d.id })
+            : invoke(SeelenCommand.ConnectBluetoothDevice, { id: d.id }));
+        } catch (e) { pairError = String(e); }
+        finally { busy.delete(d.id); render(); }
       }, d.connected ? t("按一下中斷連線") : t("按一下連線"), !busy.has(d.id) && canToggle,
         busy.has(d.id) ? (d.connected ? t("正在中斷連線…") : t("正在連線…")) : d.connected ? t("已連線") : undefined);
       const forget = el("button", "bt-forget", t("移除"));
       forget.title = t("移除這個裝置的配對");
       forget.disabled = busy.has(d.id);
       forget.addEventListener("click", async () => {
-        await invoke(SeelenCommand.ForgetBluetoothDevice, { id: d.id }).catch(console.error);
-        render();
+        if (busy.has(d.id)) return;
+        busy.add(d.id); pairError = ""; render();
+        try { await invoke(SeelenCommand.ForgetBluetoothDevice, { id: d.id }); }
+        catch (e) { pairError = String(e); }
+        finally { busy.delete(d.id); render(); }
       });
       row.append(forget);
       box.append(row);
@@ -183,10 +189,12 @@ await widget.init({ autoSizeByContent: root });
 await widget.window.setTitle("@hsuan/fogline-bt").catch(console.error);
 await render();
 await widget.ready();
-closeOnEscape(() => widget.window.hide());
+closeOnEscape(() => widget.hide());
 for (const event of [SeelenEvent.BluetoothDevicesChanged, SeelenEvent.RadiosChanged]) {
   // device updates arrive often while searching; keep a half-typed PIN intact
   subscribe(event, () => { if (!document.hidden && !(pairing && document.activeElement instanceof HTMLInputElement)) render(); }).catch(console.error);
 }
 widget.onTrigger(() => { showNearby = false; pairing = null; pairError = ""; setScanning(false); render(); });
 document.addEventListener("visibilitychange", () => { if (document.hidden) setScanning(false); });
+
+refreshWhenVisible(render);

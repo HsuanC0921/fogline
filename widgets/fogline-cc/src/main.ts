@@ -2,14 +2,14 @@ import { invoke, SeelenCommand, SeelenEvent, subscribe, Widget } from "@seelen-u
 import { core } from "@seelen-ui/lib/tauri";
 import type { MediaDevice, MediaPlayer, RadioDevice } from "@seelen-ui/lib/types";
 import { getDisplayState, setDisplayMode, setWarmStrength, setDnd, syncDnd, type DisplayState } from "./display.ts";
-import { el, GLYPH, closeOnEscape, safe, svg, openTarget } from "../../shared/ui.ts";
+import { el, GLYPH, closeOnEscape, refreshWhenVisible, safe, svg, openTarget } from "../../shared/ui.ts";
 import "./style.css";
 import { t } from "../../shared/i18n.ts";
 
 const widget = Widget.self;
 const root = document.getElementById("root")!;
 const open = openTarget;
-const go = (fn: () => unknown) => () => { widget.window.hide(); fn(); };
+const go = (fn: () => unknown) => () => { widget.hide(); fn(); };
 // commands newer than the bundled client library are called by their wire names
 const call = <T,>(cmd: string, args?: object) => invoke(cmd as never, args as never) as Promise<T>;
 
@@ -150,7 +150,7 @@ function tile(glyph: string, label: string, on: boolean, onClick: () => void): H
 let showProject = false;
 const connectivityBusy = new Set<string>();
 let connectivityError = "";
-let windowsDnd: boolean | null = null; // null while the native helper is unavailable: fall back to Seelen's own mode
+let windowsDnd: boolean | null = null;
 let dndRefreshing = false;
 async function refreshDnd() {
   if (dndRefreshing) return;
@@ -162,6 +162,7 @@ async function refreshDnd() {
 const PROJECT_MODES = [["/internal", t("僅電腦螢幕")], ["/clone", t("同步顯示")], ["/extend", t("延伸")], ["/external", t("僅第二螢幕")]] as const;
 
 async function render() {
+  if (document.hidden && root.childElementCount) return;
   if (dragging) return;
   const version = ++renderVersion;
   const [radios, mode, devices, sessions, hotspot] = await Promise.all([
@@ -194,7 +195,7 @@ async function render() {
     const row = toggleRow(glyph, name, on ? t("開啟") : t("關閉"), on, async (e) => {
       if (connectivityBusy.has(kind)) return;
       if (!(e.target as Element).closest(".fc-round")) {
-        widget.window.hide();
+        widget.hide();
         invoke(SeelenCommand.TriggerWidget, { payload: { id: panel as never } }).catch(console.error);
         return;
       }
@@ -216,7 +217,7 @@ async function render() {
   const hotspotBusy = connectivityBusy.has("hotspot") || String(hotspot?.state).toLowerCase() === "intransition";
   const hotspotRow = toggleRow(GLYPH.hotspot, t("熱點"), hotspotBusy ? t("正在切換…") : hotspot ? (hotspotOn ? t("開啟") : t("關閉")) : t("設定熱點…"), hotspotOn, async () => {
     if (hotspotBusy) return;
-    if (!hotspot) { widget.window.hide(); open("ms-settings:network-mobilehotspot"); return; }
+    if (!hotspot) { widget.hide(); open("ms-settings:network-mobilehotspot"); return; }
     connectivityBusy.add("hotspot"); connectivityError = "";
     hotspotRow.disabled = true; hotspotRow.setAttribute("aria-busy", "true");
     hotspotRow.querySelector(".fc-toggle-sub")!.textContent = t("正在切換…");
@@ -253,11 +254,17 @@ async function render() {
 
   // focus as a wide module, then the two one-shot actions as square tiles
   const row2 = el("div", "fc-row2");
+  const focusButton = toggleRow(GLYPH.focus, t("專注"), windowsDnd === null ? t("無法讀取 Windows 勿擾狀態") : focus ? t("僅限優先通知") : t("關閉"), focus, async () => {
+    if (windowsDnd === null || connectivityBusy.has("dnd")) return;
+    connectivityBusy.add("dnd"); connectivityError = ""; render();
+    try { windowsDnd = await setDnd(!windowsDnd); }
+    catch (e) { connectivityError = String(e); }
+    finally { connectivityBusy.delete("dnd"); render(); }
+  }, "fc-module fc-toggle fc-focus");
+  focusButton.disabled = windowsDnd === null || connectivityBusy.has("dnd");
+  focusButton.setAttribute("aria-busy", String(connectivityBusy.has("dnd")));
   row2.append(
-    toggleRow(GLYPH.focus, t("專注"), focus ? t("僅限優先通知") : t("關閉"), focus, async () => {
-      await invoke(SeelenCommand.SetNotificationsMode, { mode: (focus ? "All" : "PriorityOnly") as never });
-      setTimeout(render, 300);
-    }, "fc-module fc-toggle fc-focus"),
+    focusButton,
     tile(GLYPH.shot, t("截圖"), false, go(() => open("ms-screenclip:"))),
     tile(GLYPH.cast, t("投影"), showProject, () => { showProject = !showProject; render(); }),
   );
@@ -363,14 +370,17 @@ loadBrightness();
 refreshDisplay();
 refreshDnd();
 await render();
-closeOnEscape(() => { widget.window.hide(); });
+closeOnEscape(() => { widget.hide(); });
 widget.onTrigger(() => { showOutputs = false; showWarmth = false; connectivityError = ""; loadBrightness(); refreshDisplay(); refreshDnd(); render(); });
-// Non-lazy panels must opt out of ready()'s automatic startup display.
+// The lazy popup is created on demand and released by widget.hide() after its idle grace period.
 await widget.ready({ show: false });
 // keep volume, track and radios live while the panel is open
 for (const event of [SeelenEvent.MediaSessions, SeelenEvent.MediaDevices, SeelenEvent.MediaOutputs,
-  SeelenEvent.RadiosChanged, SeelenEvent.NotificationsModeChanged, SeelenEvent.SystemNetworkChanged]) {
+  SeelenEvent.RadiosChanged, SeelenEvent.SystemNetworkChanged]) {
   subscribe(event, queueRender).catch(console.error);
 }
 subscribe("network-hotspot-changed" as never, queueRender).catch(console.error);
+subscribe(SeelenEvent.NotificationsModeChanged, refreshDnd).catch(console.error);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => refreshDisplay());
+
+refreshWhenVisible(render);

@@ -239,7 +239,7 @@ function render() {
   details.append(el("div", "fcal-sep"));
   const link = el("button", "fcal-link");
   link.append(el("span", "", t("日期與時間設定…")));
-  link.addEventListener("click", () => { widget.window.hide(); open("ms-settings:dateandtime"); });
+  link.addEventListener("click", () => { widget.hide(); open("ms-settings:dateandtime"); });
   details.append(link);
   box.append(details);
   root.replaceChildren(box);
@@ -248,7 +248,7 @@ function render() {
 await widget.init({ autoSizeByContent: root });
 await widget.window.setTitle("@hsuan/fogline-cal").catch(console.error);
 render();
-closeOnEscape(() => widget.window.hide());
+closeOnEscape(() => widget.hide());
 widget.onTrigger(() => { view = new Date(); view.setDate(1); selected = new Date(); picking = false; pickingCountry = false; render(); });
-// Preload cached calendar data, but only show the popup after a toolbar trigger.
+// Read persistent calendar caches on demand; no calendar WebView is needed at login.
 await widget.ready({ show: false });

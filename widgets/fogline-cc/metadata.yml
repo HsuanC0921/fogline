@@ -5,7 +5,7 @@ metadata:
   description: !extend i18n/description.yml
 preset: Popup
 instances: Single
-lazy: false
+lazy: true
 html: !include index.html
 js: !include index.js
 css: !include index.css

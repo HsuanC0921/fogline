@@ -17,4 +17,4 @@ plugin:
       return (batteries.length > 1 ? ["Battery ", "バッテリー ", "電池 "][k] + (index + 1) + " · " : "") + Math.round(b.percentage) + "%" + (charging ? " · " + ["charging", "充電中", "充電中"][k] : "") + remaining;
     }).join("\n");
   template: !include template.js
-  onClickV2: open("ms-settings:powersleep")
+  onClick: open("ms-settings:powersleep")

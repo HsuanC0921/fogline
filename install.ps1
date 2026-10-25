@@ -18,12 +18,21 @@ if ($LASTEXITCODE -ne 0) { throw 'FoglineDisplay compilation failed; no installe
 $seelenPackage = Get-AppxPackage 'Seelen.SeelenUI' | Select-Object -First 1
 if (-not $seelenPackage) { throw 'Seelen UI package not found.' }
 $serviceCli = Join-Path $seelenPackage.InstallLocation 'slu-service.exe'
+$aumid = 'shell:AppsFolder\Seelen.SeelenUI_p6yyn03m1894e!App'
+$restartNeeded = $false
+try {
 if (Get-Process slu-service -ErrorAction SilentlyContinue) {
+  $restartNeeded = $true
   & $serviceCli stop
-  if ($LASTEXITCODE -ne 0) { throw 'Could not ask the Seelen service to stop.' }
+  # Some service versions return a nonzero code even after stopping. Check the actual process.
+  for ($attempt=0; $attempt -lt 30 -and (Get-Process slu-service -ErrorAction SilentlyContinue); $attempt++) { Start-Sleep -Milliseconds 100 }
+  if (Get-Process slu-service -ErrorAction SilentlyContinue) {
+    Start-Process -FilePath $serviceCli -ArgumentList 'stop' -Verb RunAs -WindowStyle Hidden -Wait | Out-Null
+  }
 }
 for ($attempt=0; $attempt -lt 50 -and (Get-Process slu-service -ErrorAction SilentlyContinue); $attempt++) { Start-Sleep -Milliseconds 100 }
 if (Get-Process slu-service -ErrorAction SilentlyContinue) { throw 'The Seelen watchdog is still running; no installed files were changed.' }
+$restartNeeded = $true
 Get-Process seelen-ui -ErrorAction SilentlyContinue | Stop-Process -Force
 Wait-Process seelen-ui -Timeout 15 -ErrorAction SilentlyContinue
 for ($attempt=0; $attempt -lt 50 -and (Get-Process seelen-ui -ErrorAction SilentlyContinue); $attempt++) { Start-Sleep -Milliseconds 100 }
@@ -83,6 +92,8 @@ if (Test-Path -LiteralPath $runtimePath) {
   $old = Get-Content -LiteralPath $runtimePath -Raw | ConvertFrom-Json
   try { Invoke-RestMethod -Uri "http://127.0.0.1:$($old.port)/exit" -Method Post -Headers @{ Authorization="Bearer $($old.token)" } -TimeoutSec 3 | Out-Null } catch { }
 }
+for ($attempt=0; $attempt -lt 50 -and (Get-Process FoglineDisplay -ErrorAction SilentlyContinue); $attempt++) { Start-Sleep -Milliseconds 100 }
+if (Get-Process FoglineDisplay -ErrorAction SilentlyContinue) { throw 'The previous Fogline bridge is still running; its executable was not replaced.' }
 # the binary is not committed: build it from source with the .NET Framework compiler every Windows 11 ships
 $nativeExe = Join-Path $PSScriptRoot 'native\FoglineDisplay.exe'
 $nativeSrc = Join-Path $PSScriptRoot 'native\FoglineDisplay.cs'
@@ -194,6 +205,7 @@ Get-Process FoglineGlass -ErrorAction SilentlyContinue | Stop-Process
 Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'FoglineGlass' -ErrorAction SilentlyContinue
 $staleGlass = Join-Path $nativeDir 'FoglineGlass.exe'
 if (Test-Path -LiteralPath $staleGlass) { [IO.File]::Delete($staleGlass) }
-$aumid = 'shell:AppsFolder\Seelen.SeelenUI_p6yyn03m1894e!App'
-Start-Process $aumid
+} finally {
+  if ($restartNeeded -and -not (Get-Process seelen-ui -ErrorAction SilentlyContinue)) { Start-Process $aumid }
+}
 'Done. Seelen UI is running.'

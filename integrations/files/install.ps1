@@ -12,7 +12,9 @@ if ($files) {
   $settings = Join-Path $files.FullName 'LocalState\settings\user_settings.json'
   if (Test-Path -LiteralPath $settings) {
     $running = Get-Process Files -ErrorAction SilentlyContinue
+    try {
     $running | Stop-Process; $running | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue
+    if (Get-Process Files -ErrorAction SilentlyContinue) { throw 'Files is still running; its settings were not changed.' }
     $text = [IO.File]::ReadAllText($settings)
     foreach ($entry in @{
       AppThemeSidebarBackgroundColor = $tint.Sidebar; AppThemeToolbarBackgroundColor = $tint.Surface
@@ -23,7 +25,9 @@ if ($files) {
     }
     [IO.File]::WriteAllText($settings, $text, [Text.UTF8Encoding]::new($false))
     'Files       = themed'
-    if ($running) { Start-Process 'shell:AppsFolder\49306atecsolution.FilesUWP_et10x9a9vyk8t!App' }
+    } finally {
+      if ($running -and -not (Get-Process Files -ErrorAction SilentlyContinue)) { Start-Process 'shell:AppsFolder\49306atecsolution.FilesUWP_et10x9a9vyk8t!App' }
+    }
   }
 } else { 'Files       = not installed, skipped' }
 
@@ -37,6 +41,13 @@ if (Test-Path -LiteralPath $ql) {
     $node.InnerText = $entry.Value
   }
   $xml.Save($ql)
-  Get-Process QuickLook -ErrorAction SilentlyContinue | ForEach-Object { $path = $_.Path; $_ | Stop-Process; Start-Process $path }
+  $quickLook = @(Get-Process QuickLook -ErrorAction SilentlyContinue)
+  if ($quickLook.Count) {
+    $path = $quickLook[0].Path
+    $quickLook | Stop-Process
+    $quickLook | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue
+    if (Get-Process QuickLook -ErrorAction SilentlyContinue) { throw 'QuickLook has not stopped; it was not started a second time.' }
+    Start-Process -FilePath $path
+  }
   'QuickLook   = themed'
 } else { 'QuickLook   = not installed or never run, skipped' }

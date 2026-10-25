@@ -17,4 +17,4 @@ plugin:
   tooltip: |
     const k = 2; // fogline:lang
     return online ? ["Connected · connection details and nearby networks", "接続済み · 接続情報と近くのネットワーク", "網路已連線 · 查看連線資訊與附近網路"][k] : ["Not connected · open the network panel", "未接続 · ネットワークパネルを開く", "網路未連線 · 開啟網路面板"][k]
-  onClickV2: trigger("@hsuan/fogline-net")
+  onClick: trigger("@hsuan/fogline-net")

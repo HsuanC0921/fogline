@@ -20,4 +20,4 @@ plugin:
     const k = 2; // fogline:lang
     const dnd = typeof dndActive !== "undefined" && dndActive;
     return ["Notification Centre", "通知センター", "通知中心"][k] + " · " + (dnd ? ["Do Not Disturb", "おやすみモード", "勿擾中"][k] + " · " : "") + (count > 0 ? [count + " notifications", count + "件の通知", count + " 則通知"][k] : ["No notifications", "通知なし", "沒有通知"][k])
-  onClickV2: trigger("@hsuan/fogline-notifications")
+  onClick: trigger("@hsuan/fogline-notifications")

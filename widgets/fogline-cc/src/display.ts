@@ -7,6 +7,7 @@ declare global {
 }
 export type DisplayState = { warm: boolean; dark: boolean; warmStrength: number };
 let starting: Promise<void> | null = null;
+let displayRead: Promise<DisplayState> | null = null;
 async function request<T = DisplayState>(path: string, method: string): Promise<T> {
   const config = window.foglineDisplay;
   if (!config) throw new Error(t("請重新執行 Fogline 安裝程式，以啟用顯示控制。"));
@@ -18,7 +19,11 @@ async function request<T = DisplayState>(path: string, method: string): Promise<
   if (!response.ok || result.error) throw new Error(result.error || t("顯示控制無法使用。"));
   return result;
 }
-export async function getDisplayState(): Promise<DisplayState> {
+export function getDisplayState(): Promise<DisplayState> {
+  if (!displayRead) displayRead = readDisplayState().finally(() => { displayRead = null; });
+  return displayRead;
+}
+async function readDisplayState(): Promise<DisplayState> {
   try { return await request("/state", "GET"); }
   catch (error) {
     if (!window.foglineDisplay) throw error;
@@ -38,6 +43,15 @@ export async function getDisplayState(): Promise<DisplayState> {
     return request("/state", "GET");
   }
 }
+// Reads go straight to their endpoint. Start the bridge only if the first read fails;
+// repeated reads no longer fetch /state first, and mutation requests are never retried.
+async function readBridge<T>(path: string): Promise<T> {
+  try { return await request<T>(path, "GET"); }
+  catch {
+    await getDisplayState();
+    return request<T>(path, "GET");
+  }
+}
 export async function setDisplayMode(kind: "warm" | "theme", enabled: boolean): Promise<DisplayState> {
   await getDisplayState();
   return request(`/${kind}/${kind === "warm" ? enabled ? "on" : "off" : enabled ? "dark" : "light"}`, "POST");
@@ -46,14 +60,9 @@ export async function setWarmStrength(value: number, save = false): Promise<Disp
   if (!Number.isInteger(value) || value < 0 || value > 100) throw new RangeError("Warmth must be between 0 and 100");
   return request(`/warm/strength?value=${value}${save ? "&save=1" : ""}`, "POST");
 }
-export async function openWindowsNotifications(): Promise<void> {
-  await getDisplayState();
-  await request("/notifications/open", "POST");
-}
 export type InputState = { available: boolean; languageCode?: string; native?: boolean; fullShape?: boolean; katakana?: boolean };
 export async function getInputState(): Promise<InputState> {
-  await getDisplayState();
-  return request<InputState>("/ime/state", "GET");
+  return readBridge<InputState>("/ime/state");
 }
 export async function setInputMode(native: boolean): Promise<InputState> {
   await getDisplayState();
@@ -76,8 +85,7 @@ export async function showLanguageBar(): Promise<void> {
 export type WifiNet = { ssid: string; signal: number; secured: boolean; auth: string; connected: boolean; known: boolean };
 export const wifiAvailable = () => !!window.foglineDisplay;
 export async function wifiList(): Promise<WifiNet[]> {
-  await getDisplayState();
-  const { networks } = await request<{ networks: WifiNet[] }>("/wifi/list", "GET");
+  const { networks } = await readBridge<{ networks: WifiNet[] }>("/wifi/list");
   // one row per network name: an access point that offers WPA2 and WPA3 shows up twice
   const merged = new Map<string, WifiNet>();
   for (const n of networks) {
@@ -104,8 +112,7 @@ async function mirrorDnd(on: boolean) {
   if ((current !== NotificationsMode.All) !== on) await invoke(SeelenCommand.SetNotificationsMode, { mode: on ? NotificationsMode.PriorityOnly : NotificationsMode.All });
 }
 export async function syncDnd(): Promise<boolean> {
-  await getDisplayState();
-  const { dnd } = await request<{ dnd: boolean }>("/dnd", "GET");
+  const { dnd } = await readBridge<{ dnd: boolean }>("/dnd");
   await mirrorDnd(dnd);
   return dnd;
 }
@@ -118,6 +125,5 @@ export async function setDnd(on: boolean): Promise<boolean> {
 
 export type FileHit = { name: string; path: string };
 export async function searchFiles(query: string): Promise<FileHit[]> {
-  await getDisplayState();
-  return (await request<{ files: FileHit[] }>(`/files?q=${encodeURIComponent(query)}`, "GET")).files;
+  return (await readBridge<{ files: FileHit[] }>(`/files?q=${encodeURIComponent(query)}`)).files;
 }

@@ -1,14 +1,14 @@
 import { invoke, SeelenCommand, SeelenEvent, subscribe, Widget } from "@seelen-ui/lib";
 import type { NetworkAdapter, RadioDevice } from "@seelen-ui/lib/types";
 import { wifiAvailable, wifiConnect, wifiDisconnect, wifiForget, wifiList, wifiScan, type WifiNet } from "../../fogline-cc/src/display.ts";
-import { el, GLYPH, safe, closeOnEscape, svg, toggleSwitch, settingsLink, openTarget } from "../../shared/ui.ts";
+import { el, GLYPH, safe, closeOnEscape, refreshWhenVisible, svg, toggleSwitch, settingsLink, openTarget } from "../../shared/ui.ts";
 import "./style.css";
 import { t } from "../../shared/i18n.ts";
 
 const widget = Widget.self;
 const root = document.getElementById("root")!;
 const open = openTarget;
-const go = (uri: string) => () => { widget.window.hide(); open(uri); };
+const go = (uri: string) => () => { widget.hide(); open(uri); };
 
 let nearby: WifiNet[] = [];
 let connecting: string | null = null, wifiError = "";
@@ -95,17 +95,18 @@ const radioOn = (r: RadioDevice) => (r as unknown as { isEnabled?: boolean }).is
 let renderVersion = 0;
 
 async function render() {
+  if (document.hidden && root.childElementCount) return;
   const version = ++renderVersion;
-  const [adapters, online, radios, localIp] = await Promise.all([
-    safe(invoke(SeelenCommand.GetNetworkAdapters) as Promise<NetworkAdapter[]>, []),
+  const [adapters, online, radios] = await Promise.all([
+    safe(invoke(SeelenCommand.GetNetworkAdapters) as Promise<(NetworkAdapter & { isDefault?: boolean })[]>, []),
     safe(invoke(SeelenCommand.GetNetworkInternetConnection) as Promise<boolean>, false),
     safe(invoke(SeelenCommand.GetRadios) as Promise<RadioDevice[]>, []),
-    safe(invoke(SeelenCommand.GetNetworkDefaultLocalIp) as Promise<string>, ""),
   ]);
   if (version !== renderVersion) return;
   const wifiRadio = radios.find((r) => r.kind === "WiFi");
   const wifiOn = !!wifiRadio && radioOn(wifiRadio);
-  const active = adapters.find((a) => a.ipv4 && a.ipv4 === localIp) ?? adapters.find((a) => a.status === "up" && a.ipv4);
+  // Seelen 2.8.10 exposes the default route on the adapter itself; the old IP command was removed.
+  const active = adapters.find((a) => a.isDefault && a.status === "up") ?? adapters.find((a) => a.status === "up" && a.ipv4);
   const connectedWifi = nearby.find((n) => n.connected);
   const isWifi = !!connectedWifi || /wi-?fi|wireless|802\.11/i.test(`${active?.name} ${active?.description} ${active?.type}`);
   const status = online ? t("已連線") : t("已連接，無法上網");
@@ -216,15 +217,15 @@ async function scan() {
   if (!radios.some((r) => r.kind === "WiFi" && radioOn(r))) return;
   if (scanning) return;
   scanning = true; wifiError = "";
-  render();
+  if (joining === null) render();
   if (wifiAvailable()) {
     try { await wifiScan(); await sleep(2500); nearby = await wifiList(); }
     catch (e) { wifiError = String(e).replace(/^Error: /, ""); }
-    scanning = false; render();
+    scanning = false; if (joining === null) render();
     return;
   }
   await invoke(SeelenCommand.WlanScan).catch(() => {});
-  setTimeout(() => { scanning = false; render(); }, 4000);
+  setTimeout(() => { scanning = false; if (joining === null) render(); }, 4000);
 }
 
 await widget.init({ autoSizeByContent: root });
@@ -237,9 +238,11 @@ subscribe(SeelenEvent.NetworkWlanScanned, (e) => {
   if (joining === null) render();
 }).catch(console.error);
 await widget.ready();
-closeOnEscape(() => widget.window.hide());
+closeOnEscape(() => widget.hide());
 for (const event of [SeelenEvent.NetworkAdapters, SeelenEvent.NetworkInternetConnection, SeelenEvent.RadiosChanged]) {
   // keep a half-typed password intact
   subscribe(event, () => { if (!document.hidden && joining === null) render(); }).catch(console.error);
 }
 widget.onTrigger(() => { showOthers = false; showDetails = false; joining = null; joinError = ""; render(); scan(); });
+
+refreshWhenVisible(render);

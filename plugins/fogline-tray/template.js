@@ -8,7 +8,7 @@ const GUIDS_TO_IGNORE = [
 const items = trayIcons
   .filter((icon) => icon.isVisible && icon.isPromoted && !GUIDS_TO_IGNORE.includes(icon.guid))
   .map((icon) => {
-    const act = (action) => `invoke(SeelenCommand.SendSystemTrayIconAction, { id: ${JSON.stringify(icon.registryKey)}, action: ${JSON.stringify(action)} })`;
+    const act = (action) => `invoke(SeelenCommand.SendSystemTrayIconAction, { id: ${JSON.stringify(icon.sessionId)}, action: ${JSON.stringify(action)} })`;
     return Button({
       tooltip: icon.tooltip,
       onClick: act("LeftClick"),

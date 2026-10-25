@@ -104,6 +104,14 @@ export function closeOnEscape(hide: () => void) {
   });
 }
 
+// Refresh data skipped while a native popup was hidden. This also handles a trigger
+// arriving before the WebView has completed its asynchronous visibility change.
+export function refreshWhenVisible(refresh: () => unknown): void {
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) Promise.resolve().then(refresh).catch(console.error);
+  });
+}
+
 // URI schemes (ms-settings:, https:, shell:) are not files: OpenFile does nothing for them, so they go through explorer.exe
 export function openTarget(target: string): Promise<unknown> {
   return /^(ms-[a-z-]+:|https?:|shell:)/i.test(target)

@@ -10,4 +10,4 @@ plugin:
   tooltip: |-
     const k = 2; // fogline:lang
     return ["Search apps, files and tools", "アプリ、ファイル、ツールを検索", "搜尋應用程式、檔案與工具"][k] + " · Alt + Space"
-  onClickV2: trigger("@hsuan/fogline-lantern")
+  onClick: trigger("@hsuan/fogline-lantern")
