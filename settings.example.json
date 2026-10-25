@@ -49,6 +49,8 @@
       "mode": "MinContent",
       "position": "Bottom",
       "hideMode": "Never",
+      "showEndTask": true,
+      "showInstanceCounter": false,
       "size": 48,
       "padding": 6,
       "margin": 6,
