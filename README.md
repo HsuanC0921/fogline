@@ -2,6 +2,8 @@
 
 [English](README.md) · [繁體中文](README.zh-TW.md)
 
+> **Project status (2026-10-27): Archived.** I have paused Fogline development while testing a Windows desktop setup based on YASB and Windhawk. I made this decision because my Seelen UI setup raised recurring concerns about stability, Windows compatibility, and background resource use. This describes my experience on one PC; it is not a general benchmark or a claim that every Seelen UI installation has the same issues.
+
 A macOS-inspired desktop for **Windows 11 and Seelen UI**: a translucent menu bar, floating Dock, coordinated panels, a Spotlight-style search box. An independent community project, not an Apple product.
 
 ![Fogline menu bar](docs/menubar.png)

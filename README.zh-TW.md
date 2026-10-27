@@ -2,6 +2,8 @@
 
 [English](README.md) · [繁體中文](README.zh-TW.md)
 
+> **專案狀態（2026-10-27）：已封存。** 我已暫停 Fogline 開發，正在改測以 YASB + Windhawk 為主的 Windows 桌面配置。這是因為我自己的 Seelen UI 環境反覆讓我擔心穩定性、Windows 相容性與背景資源使用。這是單一電腦的個人經驗，不是通用評測，也不代表所有 Seelen UI 安裝都會遇到相同問題。
+
 為 **Windows 11 與 Seelen UI** 設計、受 macOS 啟發的桌面外觀：半透明頂欄、浮動 Dock、共用材質的彈出面板，以及 Spotlight 風格的搜尋框。Fogline 是獨立社群專案，與 Apple 無隸屬關係。
 
 ![Fogline 頂欄](docs/menubar.png)
